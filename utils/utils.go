@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"golang.org/x/crypto/bcrypt"
 	"encoding/json"
-    "net/http"
-    "time"
-    "github.com/golang-jwt/jwt/v5"
+	"fmt"
+	"net/http"
+	"time"
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func HashPassword (password string) (string, error) {
@@ -45,18 +46,20 @@ func GenerateJWT(secret string, userID int, role string) (string, error) {
     return token.SignedString([]byte(secret))
 }
 
-func ValidateJWT(tokenStr string, secret string) (int, error) {
+func ValidateJWT(tokenStr string, secret string) (int, string, error) {
     token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
         return []byte(secret), nil
     })
 
     if err != nil || !token.Valid {
-        return 0, err
+        return 0, "", err
     }
 
-    if claims, ok := token.Claims.(jwt.MapClaims); ok {
-        // sub is float64 in the parsed token
-        return int(claims["sub"].(float64)), nil
-    }
-    return 0, nil
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		uid, _ := claims["sub"].(float64)
+        role, _ := claims["role"].(string)
+        return int(uid), role, nil
+	}
+	
+	return 0, "", fmt.Errorf("invalid sub claim")
 }
