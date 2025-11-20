@@ -18,7 +18,7 @@ func InitDb() *gorm.DB {
 
     err = godotenv.Load()
     if err != nil {
-        log.Fatal("error loading .env file")
+        log.Fatalf("error loading .env file: %v", err)
     }
 
     connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
@@ -31,13 +31,14 @@ func InitDb() *gorm.DB {
 
     Db, err = gorm.Open(postgres.Open(connStr), &gorm.Config{})
     if err != nil {
-        panic(err)
+        log.Fatalf("Failed to connect to database: %v", err)
     }
     fmt.Println("connected to database successfully!")
 
-    err = Db.AutoMigrate(&models.User{}, &models.Cart{}, &models.Order{}, &models.Review{})
+    err = Db.AutoMigrate(&models.User{}, &models.Product{}, &models.Cart{}, &models.CartItem{}, &models.Order{}, &models.OrderItem{}, &models.Review{})
     if err != nil {
-        log.Fatal("unable to migrate schema", err)
+        log.Fatalf("unable to migrate schema: %v", err)
     }
+    fmt.Println("Database automigration completed!")
     return Db
 }
