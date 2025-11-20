@@ -8,7 +8,7 @@ import (
 
 func SetupRouter(
 	userHandler *handlers.UserHandler, productHandler *handlers.ProductHandler, cartHandler *handlers.CartHandler,
-	reviewHandler *handlers.ReviewHandler) *mux.Router {
+	orderHandler *handlers.OrderHandler, reviewHandler *handlers.ReviewHandler) *mux.Router {
 
 	r := mux.NewRouter()
 
