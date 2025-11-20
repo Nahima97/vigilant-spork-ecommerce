@@ -6,5 +6,5 @@ type ReviewRepository interface {
 }
 
 type ReviewRepo struct {
-	db *gorm.DB
+	Db *gorm.DB
 }

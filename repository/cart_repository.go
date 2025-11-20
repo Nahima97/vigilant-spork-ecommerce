@@ -6,5 +6,5 @@ type CartRepository interface {
 }
 
 type CartRepo struct {
-	db *gorm.DB
+	Db *gorm.DB
 }

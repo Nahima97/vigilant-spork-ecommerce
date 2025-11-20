@@ -6,5 +6,5 @@ type ProductRepository interface {
 }
 
 type ProductRepo struct {
-	db *gorm.DB
+	Db *gorm.DB
 }

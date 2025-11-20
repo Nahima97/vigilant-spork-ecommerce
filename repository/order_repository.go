@@ -6,5 +6,5 @@ type OrderRepository interface {
 }
 
 type OrderRepo struct {
-	db *gorm.DB
+	Db *gorm.DB
 }
