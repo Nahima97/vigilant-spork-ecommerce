@@ -26,9 +26,9 @@ func main() {
 	reviewService := &services.ReviewService{ReviewRepo: reviewRepo}
 
 	userHandler := &handlers.UserHandler{Service: userService}
-	productHandler := &handlers.productHandler{Service: productService}
-	cartHandler := &handlers.cartHandler{Service: cartService}
-	reviewHandler := &handlers.reviewHandler{Service: reviewService}
+	productHandler := &handlers.ProductHandler{Service: productService}
+	cartHandler := &handlers.CartHandler{Service: cartService}
+	reviewHandler := &handlers.ReviewHandler{Service: reviewService}
 
 	r := routes.SetupRouter(userHandler, productHandler, cartHandler, reviewHandler)
 

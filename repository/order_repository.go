@@ -2,9 +2,9 @@ package repository
 
 import"gorm.io/gorm"
 
-type CartRepository interface {
+type OrderRepository interface {
 }
 
-type CartRepo struct {
+type OrderRepo struct {
 	db *gorm.DB
 }
