@@ -1,15 +1,15 @@
 package middleware
 
 import (
-    "context"
-    "net/http"
-    "strings"
+	"context"
+	"net/http"
+	"strings"
 	"vigilant-spork/utils"
 )
 
 type contextKey string
 const UserIDKey contextKey = "userID"
-const UserRoleKey contextKey = "UserRole"
+const UserRoleKey contextKey = "userRole"
 
 func AuthMiddleware(secret string) func(http.Handler) http.Handler {
     return func(next http.Handler) http.Handler {
@@ -21,7 +21,7 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
             }
 
             token := strings.TrimPrefix(authHeader, "Bearer ")
-            uid, role, err := utils.ValidateJWT(token, secret)
+            uid, role, err := utils.ValidateJWT(token)
             if err != nil {
                 utils.ErrorJSON(w, http.StatusUnauthorized, err.Error())
                 return
