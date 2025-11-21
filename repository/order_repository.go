@@ -2,9 +2,9 @@ package repository
 
 import"gorm.io/gorm"
 
-type ReviewRepository interface {
+type OrderRepository interface {
 }
 
-type ReviewRepo struct {
+type OrderRepo struct {
 	Db *gorm.DB
 }

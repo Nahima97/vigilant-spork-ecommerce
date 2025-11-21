@@ -7,7 +7,6 @@ import (
 	"vigilant-spork/utils"
 )
 
-
 type contextKey string
 const UserIDKey contextKey = "userID"
 const UserRoleKey contextKey = "UserRole"
@@ -44,7 +43,8 @@ func GetUserID(ctx context.Context) int {
 }
 
 func GetUserRole(ctx context.Context) string {
-    if role, ok := ctx.Value(UserRoleKey).(string); ok {
+    val := ctx.Value(UserRoleKey)
+	if role, ok := val.(string); ok {
         return role
     }
     return ""
