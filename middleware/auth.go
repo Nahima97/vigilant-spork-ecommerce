@@ -21,7 +21,7 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
             }
 
             token := strings.TrimPrefix(authHeader, "Bearer ")
-            uid, role, err := utils.ValidateJWT(token)
+            uid, role, err := utils.ValidateJWT(token, secret)
             if err != nil {
                 utils.ErrorJSON(w, http.StatusUnauthorized, err.Error())
                 return

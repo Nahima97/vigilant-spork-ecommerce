@@ -2,7 +2,10 @@ package routes
 
 import (
 	"net/http"
+	"os"
 	"vigilant-spork/handlers"
+	"vigilant-spork/middleware"
+
 	"github.com/gorilla/mux"
 )
 
@@ -19,6 +22,13 @@ func SetupRouter(
 	// User Routes
 	r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
+
+	// protected routes
+    secret := os.Getenv("JWT_SECRET")
+    protected := r.PathPrefix("/api/v1").Subrouter()
+    protected.Use(middleware.AuthMiddleware(secret))
+
+	protected.HandleFunc("/products", productHandler.AddProduct).Methods("POST")
 
 	return r
 }
