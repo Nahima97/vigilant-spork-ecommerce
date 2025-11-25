@@ -3,8 +3,7 @@ package repository
 import (
 	"vigilant-spork/db"
 	"vigilant-spork/models"
-
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -12,6 +11,7 @@ type ProductRepository interface {
 	AddProduct(product *models.Product) error
 	GetProductByID(id uuid.UUID) (*models.Product, error)
 	GetProductByName(name string) (*models.Product, error)
+	UpdateProduct(product *models.Product) (*models.Product, error)
 }
 
 type ProductRepo struct {
@@ -38,4 +38,20 @@ func (r *ProductRepo) GetProductByName(name string) (*models.Product, error) {
 		return nil, err
 	}
 	return &product, nil
+}
+
+func (r *ProductRepo) UpdateProduct(product *models.Product) (*models.Product, error) {
+
+	err := db.Db.Model(&models.Product{}).Where("id = ?", product.ID).Updates(product).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedProduct models.Product
+	err = db.Db.First(&updatedProduct, "id = ?", product.ID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &updatedProduct, nil
 }

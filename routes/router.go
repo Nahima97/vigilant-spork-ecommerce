@@ -29,6 +29,7 @@ func SetupRouter(
     protected.Use(middleware.AuthMiddleware(secret))
 
 	protected.HandleFunc("/products", productHandler.AddProduct).Methods("POST")
+	protected.HandleFunc("/products/{id}", productHandler.UpdateProduct).Methods("PATCH")
 
 	return r
 }

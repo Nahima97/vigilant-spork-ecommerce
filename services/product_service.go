@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
-
+    "github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -34,8 +34,8 @@ func (s *ProductService) AddProduct (product *models.Product) error {
         return errors.New("stock quantity is required and cannot be 0")
     }
 
-    existing, err := s.ProductRepo.GetProductByName(product.Name)
-    if err == nil && existing != nil {
+    existingProduct, err := s.ProductRepo.GetProductByName(product.Name)
+    if err == nil && existingProduct != nil {
         return errors.New("product already exists")
     }
 
@@ -48,4 +48,34 @@ func (s *ProductService) AddProduct (product *models.Product) error {
         return err
     }
     return nil
+}
+
+func (s *ProductService) UpdateProduct (productID uuid.UUID, req *models.Product) (*models.Product, error) {
+
+    product, err := s.ProductRepo.GetProductByID(productID)
+    if err != nil {
+        return nil, err 
+    }
+    
+    if req.Name != "" {
+        product.Name = req.Name
+    }
+    if req.Description != "" {
+        product.Description = req.Description
+    }
+    if req.Category != "" {
+        product.Category = req.Category
+    }
+    if req.Price != 0.0 {
+        product.Price = req.Price
+    }
+    if req.StockQuantity != 0 {
+        product.StockQuantity = req.StockQuantity
+    }
+
+    updatedProduct, err := s.ProductRepo.UpdateProduct(product)
+    if err != nil {
+        return nil, err
+    }
+    return updatedProduct, nil
 }
