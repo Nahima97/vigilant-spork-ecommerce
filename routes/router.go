@@ -17,8 +17,10 @@ func SetupRouter(
 	})
 
 	// User Routes
-	r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
+	// r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
 
 	return r
 }
+
+	

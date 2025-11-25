@@ -2,16 +2,22 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
-
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
+	
 )
 
 type UserService struct {
 	UserRepo repository.UserRepository
+	secret string
 }
+
+
+
 // error for duplicate email
 var ErrEmailExists = errors.New("email already registered")
 
@@ -51,4 +57,19 @@ func (s *UserService) RegisterUser(user *models.User) error {
 func isValidEmail(email string) bool {
 	regex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	return regex.MatchString(email)
+}
+
+func (s *UserService) RevokeSession(tokenString string) error {
+    token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+        if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+        }
+        return []byte(s.secret), nil
+    })
+
+    if err != nil || !token.Valid {
+        return errors.New("invalid or expired token")
+    }
+
+    return s.UserRepo.AddTokenToBlacklist(tokenString)
 }

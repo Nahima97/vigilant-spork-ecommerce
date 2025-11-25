@@ -1,15 +1,25 @@
 package middleware
 
 import (
-    "context"
-    "net/http"
-    "strings"
+	"context"
+	"fmt"
+	"net/http"
+	"strings"
 	"vigilant-spork/utils"
+
+	"github.com/golang-jwt/jwt"
+    "github.com/gin-gonic/gin"
+    "vigilant-spork/repository"
+
 )
 
 type contextKey string
 const UserIDKey contextKey = "userID"
 const UserRoleKey contextKey = "UserRole"
+
+
+
+
 
 func AuthMiddleware(secret string) func(http.Handler) http.Handler {
     return func(next http.Handler) http.Handler {
@@ -48,4 +58,44 @@ func GetUserRole(ctx context.Context) string {
         return role
     }
     return ""
+}
+
+
+func AuthGinMiddleware(userRepo *repository.UserRepo, secret string) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        authHeader := c.GetHeader("Authorization")
+        if authHeader == "" {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+            return
+        }
+
+        // Trim the Bearer prefix
+        tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+        // Check if token is blacklisted
+        if userRepo.IsTokenBlacklisted(tokenString) {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token is blacklisted"})
+            return
+        }
+
+        // Parse and validate the JWT
+        token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+            if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+                return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+            }
+            return []byte(secret), nil
+        })
+
+        if err != nil || !token.Valid {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+            return
+        }
+
+        
+        c.Set("jwt", token)
+        c.Set("jwtTokenString", tokenString) // <-- Add it here
+
+        
+        c.Next()
+    }
 }
