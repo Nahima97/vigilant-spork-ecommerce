@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
+	"vigilant-spork/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -51,4 +52,24 @@ func (s *UserService) RegisterUser(user *models.User) error {
 func isValidEmail(email string) bool {
 	regex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	return regex.MatchString(email)
+}
+
+func (s *UserService) Login(login *models.User) (string, error) {
+	
+	user, err := s.UserRepo.GetUserByEmail(login.Email)
+	if err != nil {
+		return "", err
+	}
+
+	err = utils.ComparePassword(user.Password, login.Password)
+	if err != nil {
+		return "", err
+	}
+
+	token, err := utils.GenerateJWT(user.ID, user.Role)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+
 }
