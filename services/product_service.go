@@ -79,3 +79,12 @@ func (s *ProductService) UpdateProduct (productID uuid.UUID, req *models.Product
     }
     return updatedProduct, nil
 }
+
+func (s *ProductService) DeleteProduct(productID uuid.UUID) error {
+
+    err := s.ProductRepo.DeleteProduct(productID)
+    if err != nil {
+        return err 
+    }
+    return nil
+}

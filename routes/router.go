@@ -30,6 +30,7 @@ func SetupRouter(
 
 	protected.HandleFunc("/products", productHandler.AddProduct).Methods("POST")
 	protected.HandleFunc("/products/{id}", productHandler.UpdateProduct).Methods("PATCH")
+	protected.HandleFunc("/products/{id}", productHandler.DeleteProduct).Methods("DELETE")
 
 	return r
 }

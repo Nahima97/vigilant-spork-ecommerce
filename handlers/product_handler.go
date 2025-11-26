@@ -62,11 +62,34 @@ func (h *ProductHandler) UpdateProduct (w http.ResponseWriter, r *http.Request) 
     
     updatedProduct, err := h.Service.UpdateProduct(productUUID, &product)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "unable to update product", http.StatusInternalServerError)
         return 
     }
 
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(updatedProduct)
+}
+
+func (h *ProductHandler) DeleteProduct (w http.ResponseWriter, r *http.Request) {
+    
+    role := middleware.GetUserRole(r.Context())
+    if role != "admin" {
+        http.Error(w, "Forbidden", http.StatusForbidden)
+        return
+    }
+
+    productID := mux.Vars(r)["id"]
+    productUUID, err := uuid.Parse(productID)
+    if err != nil {
+        http.Error(w, "Invalid product ID", http.StatusBadRequest)
+        return 
+    }
+
+    err = h.Service.DeleteProduct(productUUID)
+    if err != nil {
+        http.Error(w, "unable to delete product", http.StatusInternalServerError)
+        return 
+    }
+    w.WriteHeader(http.StatusOK)
 }
