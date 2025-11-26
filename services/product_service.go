@@ -50,6 +50,15 @@ func (s *ProductService) AddProduct (product *models.Product) error {
     return nil
 }
 
+func (s *ProductService) GetProductByID (productID uuid.UUID) (*models.Product, error) {
+
+    product, err := s.ProductRepo.GetProductByID(productID)
+    if err != nil {
+        return nil, err 
+    }
+    return product, nil
+}
+
 func (s *ProductService) UpdateProduct (productID uuid.UUID, req *models.Product) (*models.Product, error) {
 
     product, err := s.ProductRepo.GetProductByID(productID)

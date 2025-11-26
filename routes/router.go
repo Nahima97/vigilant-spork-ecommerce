@@ -19,6 +19,9 @@ func SetupRouter(
 		w.Write([]byte("Welcome to FutureMarket by Vigilant-Spork!"))
 	})
 
+	// Public Routes
+	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductByID).Methods("GET")
+
 	// User Routes
 	r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")

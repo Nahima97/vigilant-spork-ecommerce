@@ -39,6 +39,42 @@ func (h *ProductHandler) AddProduct (w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(product)
 }
 
+func (h *ProductHandler) GetProductByID (w http.ResponseWriter, r *http.Request) {
+    productID := mux.Vars(r)["id"]
+    productUUID, err := uuid.Parse(productID)
+    if err != nil {
+        http.Error(w, "Invalid product ID", http.StatusBadRequest)
+        return 
+    }
+
+    product, err := h.Service.GetProductByID(productUUID)
+    if err != nil {
+        http.Error(w, "Product ID not found", http.StatusNotFound)
+        return 
+    }
+
+    type ProductResponse struct {
+        Name        string    `json:"name"`
+        Description string    `json:"description"`
+        Price       float64   `json:"price"`
+        Stock       int       `json:"stock"`
+        Data        string    `json:"data"`
+    }
+
+    productresponse := ProductResponse{
+        Name: product.Name,
+        Description: product.Description,
+        Price: product.Price,
+        Stock: product.StockQuantity,
+        Data: product.Data,
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(productresponse)
+}
+
+
 func (h *ProductHandler) UpdateProduct (w http.ResponseWriter, r *http.Request) {
     var product models.Product
     err := json.NewDecoder(r.Body).Decode(&product)
@@ -93,3 +129,4 @@ func (h *ProductHandler) DeleteProduct (w http.ResponseWriter, r *http.Request) 
     }
     w.WriteHeader(http.StatusOK)
 }
+
