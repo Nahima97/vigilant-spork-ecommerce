@@ -24,7 +24,7 @@ func SetupRouter(
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
 
 	// Public route: anyone can view reviews
-	r.HandleFunc("/products/", reviewHandler.GetReviews).Methods("GET")
+	r.HandleFunc("/products/{productID}/reviews", reviewHandler.GetReviews).Methods("GET")
 
 	// protected routes
 	secret := os.Getenv("JWT_SECRET")
@@ -33,13 +33,12 @@ func SetupRouter(
 
 	// Create a review
 	protected.HandleFunc("/products/{product_id}/review", reviewHandler.SubmitReview).Methods("POST")
-	
+
 	// Update a review (authenticated user updates their review)
 	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.UpdateReview).Methods("PUT")
 
 	// Delete a review (authenticated user deletes their review)
 	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.DeleteReview).Methods("DELETE")
-
 
 	// helpful NotFound handler
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

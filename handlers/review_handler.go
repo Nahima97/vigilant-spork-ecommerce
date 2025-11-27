@@ -117,9 +117,9 @@ func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 
 // GetReviews handles GET /products/{product_id}/reviews
 func (h *ReviewHandler) GetReviews(w http.ResponseWriter, r *http.Request) {
-    // vars := mux.Vars(r)
+    vars := mux.Vars(r)
 	// r.URL.Query().Get("product_id")
-    productID, err := uuid.FromString(r.URL.Query().Get("productID"))
+    productID, err := uuid.FromString(vars["productID"])
     if err != nil {
         http.Error(w, "invalid product ID", http.StatusBadRequest)
         return
