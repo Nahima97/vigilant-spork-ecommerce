@@ -5,14 +5,12 @@ import (
 	"net/http"
 	"strings"
 	"vigilant-spork/utils"
-
-	"github.com/gofrs/uuid"
 )
 
 type contextKey string
 
-var userIDKey contextKey = "userID"
-var userRoleKey contextKey = "userRole"
+var UserIDKey contextKey = "userID"
+var UserRoleKey contextKey = "userRole"
 
 // AuthMiddleware validates JWT and stores user ID (as uuid.UUID) and role in context
 func AuthMiddleware(secret string) func(http.Handler) http.Handler {
@@ -38,8 +36,8 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), userIDKey, uid)
-			ctx = context.WithValue(ctx, userRoleKey, role)
+			ctx := context.WithValue(r.Context(), UserIDKey, uid)
+			ctx = context.WithValue(ctx, UserRoleKey, role)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -47,7 +45,7 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 }
 
 func GetUserID(ctx context.Context) int {
-	if id, ok := ctx.Value(userIDKey).(int); ok {
+	if id, ok := ctx.Value(UserIDKey).(int); ok {
 		return id
 	}
 	return 0
@@ -55,7 +53,7 @@ func GetUserID(ctx context.Context) int {
 
 // GetUserRole retrieves role string from context
 func GetUserRole(ctx context.Context) string {
-	if role, ok := ctx.Value(userRoleKey).(string); ok {
+	if role, ok := ctx.Value(UserRoleKey).(string); ok {
 		return role
 	}
 	return ""
