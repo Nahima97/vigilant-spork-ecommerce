@@ -59,6 +59,16 @@ func (s *ProductService) GetProductByID (productID uuid.UUID) (*models.Product, 
     return product, nil
 }
 
+func (s *ProductService) GetProducts (page int, limit int) ([]models.Product, error) {
+    offset := (page - 1) * limit 
+
+    products, err := s.ProductRepo.GetProducts(limit, offset)
+    if err != nil {
+        return nil, err 
+    }
+    return products, nil
+}
+
 func (s *ProductService) UpdateProduct (productID uuid.UUID, req *models.Product) (*models.Product, error) {
 
     product, err := s.ProductRepo.GetProductByID(productID)
