@@ -34,7 +34,7 @@ func (s *ProductService) AddProduct (product *models.Product) error {
         return errors.New("stock quantity is required and cannot be 0")
     }
 
-    existingProduct, err := s.ProductRepo.GetProductByName(product.Name)
+    existingProduct, err := s.ProductRepo.GetProductByID(product.ID)
     if err == nil && existingProduct != nil {
         return errors.New("product already exists")
     }
@@ -51,7 +51,6 @@ func (s *ProductService) AddProduct (product *models.Product) error {
 }
 
 func (s *ProductService) GetProductByID (productID uuid.UUID) (*models.Product, error) {
-
     product, err := s.ProductRepo.GetProductByID(productID)
     if err != nil {
         return nil, err 
@@ -70,7 +69,6 @@ func (s *ProductService) GetProducts (page int, limit int) ([]models.Product, er
 }
 
 func (s *ProductService) UpdateProduct (productID uuid.UUID, req *models.Product) (*models.Product, error) {
-
     product, err := s.ProductRepo.GetProductByID(productID)
     if err != nil {
         return nil, err 
@@ -100,7 +98,6 @@ func (s *ProductService) UpdateProduct (productID uuid.UUID, req *models.Product
 }
 
 func (s *ProductService) DeleteProduct(productID uuid.UUID) error {
-
     err := s.ProductRepo.DeleteProduct(productID)
     if err != nil {
         return err 

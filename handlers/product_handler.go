@@ -45,13 +45,13 @@ func (h *ProductHandler) GetProductByID (w http.ResponseWriter, r *http.Request)
     productID := mux.Vars(r)["id"]
     productUUID, err := uuid.Parse(productID)
     if err != nil {
-        http.Error(w, "Invalid product ID", http.StatusBadRequest)
+        http.Error(w, "Invalid product ID", http.StatusNotFound)
         return 
     }
 
     product, err := h.Service.GetProductByID(productUUID)
     if err != nil {
-        http.Error(w, "Product ID not found", http.StatusNotFound)
+        http.Error(w, "Product not found", http.StatusNotFound)
         return 
     }
 
@@ -115,7 +115,7 @@ func (h *ProductHandler) UpdateProduct (w http.ResponseWriter, r *http.Request) 
     productID := mux.Vars(r)["id"]
     productUUID, err := uuid.Parse(productID)
     if err != nil {
-        http.Error(w, "Invalid product ID", http.StatusBadRequest)
+        http.Error(w, "Invalid product ID", http.StatusNotFound)
         return 
     }
     
@@ -141,7 +141,7 @@ func (h *ProductHandler) DeleteProduct (w http.ResponseWriter, r *http.Request) 
     productID := mux.Vars(r)["id"]
     productUUID, err := uuid.Parse(productID)
     if err != nil {
-        http.Error(w, "Invalid product ID", http.StatusBadRequest)
+        http.Error(w, "Invalid product ID", http.StatusNotFound)
         return 
     }
 
@@ -151,5 +151,6 @@ func (h *ProductHandler) DeleteProduct (w http.ResponseWriter, r *http.Request) 
         return 
     }
     w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode("product deleted successfully!")
 }
 

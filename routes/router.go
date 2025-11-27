@@ -20,13 +20,11 @@ func SetupRouter(
 	})
 
 	// Public Routes
-	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductByID).Methods("GET")
-
-	// User Routes
 	r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
+	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductByID).Methods("GET")
 
-	// protected routes
+	// Protected routes
     secret := os.Getenv("JWT_SECRET")
     protected := r.PathPrefix("/api/v1").Subrouter()
     protected.Use(middleware.AuthMiddleware(secret))

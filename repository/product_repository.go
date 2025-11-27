@@ -21,7 +21,11 @@ type ProductRepo struct {
 }
 
 func (r *ProductRepo) AddProduct(product *models.Product) error {
-	return db.Db.Create(product).Error
+	err := db.Db.Create(product).Error
+	if err != nil {
+		return err 
+	}
+	return nil 
 }
 
 func (r *ProductRepo) GetProductByID(id uuid.UUID) (*models.Product, error) {
