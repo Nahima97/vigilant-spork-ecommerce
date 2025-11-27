@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
-
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -38,9 +36,7 @@ func ErrorJSON(w http.ResponseWriter, status int, msg string) {
     WriteJSON(w, status, map[string]string{"error": msg})
 }
 
-var secret = os.Getenv("JWT_SECRET")
-
-func GenerateJWT(userID uuid.UUID, role string) (string, error) {
+func GenerateJWT(secret string, userID uuid.UUID, role string) (string, error) {
     claims := jwt.MapClaims{
         "sub":  userID.String(),
         "role": role,
@@ -51,7 +47,7 @@ func GenerateJWT(userID uuid.UUID, role string) (string, error) {
     return token.SignedString([]byte(secret))
 }
 
-func ValidateJWT(tokenStr string) (string, string, error) {
+func ValidateJWT(tokenStr string, secret string) (string, string, error) {
     token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
         return []byte(secret), nil
     })
