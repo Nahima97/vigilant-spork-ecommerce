@@ -12,6 +12,7 @@ type ProductRepository interface {
 	AddProduct(product *models.Product) error
 	GetProductByID(id uuid.UUID) (*models.Product, error)
 	GetProductByName(name string) (*models.Product, error)
+	UpdateAggregates(productID uuid.UUID, avgRating float64, reviewCount int64) error
 }
 
 type ProductRepo struct {
@@ -38,4 +39,11 @@ func (r *ProductRepo) GetProductByName(name string) (*models.Product, error) {
 		return nil, err
 	}
 	return &product, nil
+}
+func (r *ProductRepo) UpdateAggregates(productID uuid.UUID, avgRating float64, reviewCount int64) error {
+	return r.Db.Model(&models.Product{}).Where("id = ?", productID).
+		Updates(map[string]interface{}{
+			"rating":       avgRating,
+			"review_count": reviewCount,
+		}).Error
 }
