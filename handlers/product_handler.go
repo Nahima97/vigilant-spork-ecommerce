@@ -16,8 +16,16 @@ type ProductHandler struct {
     Service *services.ProductService
 }
 
+type ProductResponse struct {
+    Name        string    `json:"name"`
+    Description string    `json:"description"`
+    Price       float64   `json:"price"`
+    Stock       int       `json:"stock"`
+    Data        string    `json:"data"`
+}
+
 func (h *ProductHandler) AddProduct (w http.ResponseWriter, r *http.Request) {
-    var product models.Product
+    var product []models.Product
     err := json.NewDecoder(r.Body).Decode(&product)
     if err != nil {
         http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -30,7 +38,7 @@ func (h *ProductHandler) AddProduct (w http.ResponseWriter, r *http.Request) {
         return
     }
     
-    err = h.Service.AddProduct(&product)
+    err = h.Service.AddProduct(product)
     if err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
         return 
@@ -53,14 +61,6 @@ func (h *ProductHandler) GetProductByID (w http.ResponseWriter, r *http.Request)
     if err != nil {
         http.Error(w, "Product not found", http.StatusNotFound)
         return 
-    }
-
-    type ProductResponse struct {
-        Name        string    `json:"name"`
-        Description string    `json:"description"`
-        Price       float64   `json:"price"`
-        Stock       int       `json:"stock"`
-        Data        string    `json:"data"`
     }
 
     productresponse := ProductResponse{
@@ -87,15 +87,46 @@ func (h *ProductHandler) GetProducts (w http.ResponseWriter, r *http.Request) {
         limit = 20 // default to 20 items per page 
     }
 
-    products, err := h.Service.GetProducts(page, limit)
+    products, totalItems, totalPages, err := h.Service.GetProducts(page, limit)
     if err != nil {
         http.Error(w, "Unable to get products", http.StatusInternalServerError)
         return 
+    }  
+
+    type Metadata struct {
+        TotalItems int64 `json:"total_items"`
+        TotalPages int   `json:"total_pages"`
+        CurrentPage int  `json:"current_page"`
+        }
+
+    var responses []ProductResponse
+    for _, p := range products {
+        responses = append(responses, ProductResponse{
+            Name: p.Name,
+            Description: p.Description,
+            Price: p.Price,
+            Stock: p.StockQuantity,
+            Data: p.Data,
+        })
+    }
+
+    type Response struct {
+        Products []ProductResponse
+        Metadata Metadata
+    }
+
+    response := Response {
+        Products: responses,
+        Metadata: Metadata{
+            TotalItems: totalItems,
+            TotalPages: totalPages,
+            CurrentPage: page,
+        },
     }
     
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(products)
+    json.NewEncoder(w).Encode(response)
 }
 
 func (h *ProductHandler) UpdateProduct (w http.ResponseWriter, r *http.Request) {
