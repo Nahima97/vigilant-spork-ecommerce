@@ -79,19 +79,34 @@ func (h *ProductHandler) GetProductByID (w http.ResponseWriter, r *http.Request)
 func (h *ProductHandler) GetProducts (w http.ResponseWriter, r *http.Request) {
     page, err := strconv.Atoi(r.URL.Query().Get("page"))
     if err != nil || page < 1 {
-        page = 1 // defaults to page 1
+        page = 1 
     }
 
     limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
     if err != nil || limit < 1 {
-        limit = 20 // default to 20 items per page 
+        limit = 20 
     }
 
-    products, totalItems, totalPages, err := h.Service.GetProducts(page, limit)
+    totalItems, err := h.Service.GetTotalItems()
     if err != nil {
-        http.Error(w, "Unable to get products", http.StatusInternalServerError)
+        http.Error(w, "unable to get total number of items", http.StatusInternalServerError)
         return 
-    }  
+    }
+    
+    totalPages := (int(totalItems) + limit - 1) / limit
+
+    if totalPages == 0 {
+        totalPages = 1
+    }
+
+    if page > totalPages {
+        page = totalPages
+    }
+
+    rawData, err := h.Service.GetProducts(page, limit)
+    if err != nil {
+        http.Error(w, "unable to get products", http.StatusInternalServerError)
+    }
 
     type Metadata struct {
         TotalItems int64 `json:"total_items"`
@@ -99,9 +114,9 @@ func (h *ProductHandler) GetProducts (w http.ResponseWriter, r *http.Request) {
         CurrentPage int  `json:"current_page"`
         }
 
-    var responses []ProductResponse
-    for _, p := range products {
-        responses = append(responses, ProductResponse{
+    var refinedData []ProductResponse
+    for _, p := range rawData {
+        refinedData = append(refinedData, ProductResponse{
             Name: p.Name,
             Description: p.Description,
             Price: p.Price,
@@ -116,7 +131,7 @@ func (h *ProductHandler) GetProducts (w http.ResponseWriter, r *http.Request) {
     }
 
     response := Response {
-        Products: responses,
+        Products: refinedData,
         Metadata: Metadata{
             TotalItems: totalItems,
             TotalPages: totalPages,
@@ -125,7 +140,6 @@ func (h *ProductHandler) GetProducts (w http.ResponseWriter, r *http.Request) {
     }
     
     w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
     json.NewEncoder(w).Encode(response)
 }
 

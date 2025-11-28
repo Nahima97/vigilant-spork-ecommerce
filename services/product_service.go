@@ -35,7 +35,7 @@ func (s *ProductService) AddProduct(products []models.Product) error {
 			return errors.New("stock quantity is required and cannot be 0")
 		}
 
-        product.ID = uuid.New()
+		product.ID = uuid.New()
 
 		existingProduct, err := s.ProductRepo.GetProductByName(product.Name)
 		if err == nil && existingProduct != nil {
@@ -45,7 +45,7 @@ func (s *ProductService) AddProduct(products []models.Product) error {
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("failed to check product existence: %w", err)
 		}
-	
+
 		err = s.ProductRepo.AddProduct(&product)
 		if err != nil {
 			return err
@@ -63,22 +63,22 @@ func (s *ProductService) GetProductByID(productID uuid.UUID) (*models.Product, e
 	return product, nil
 }
 
-func (s *ProductService) GetProducts(page int, limit int) ([]models.Product, int64, int, error) {
+func (s *ProductService) GetProducts(page int, limit int) ([]models.Product, error) {
 	offset := (page - 1) * limit
 
 	products, err := s.ProductRepo.GetProducts(limit, offset)
 	if err != nil {
-		return nil, 0, 0, err
+		return nil, err
 	}
+	return products, nil
+}
 
+func (s *ProductService) GetTotalItems() (int64, error) {
 	totalItems, err := s.ProductRepo.GetProductsMetadata()
 	if err != nil {
-		return nil, 0, 0, err
+		return 0, err
 	}
-
-	totalPages := int(totalItems) / limit
-
-	return products, totalItems, totalPages, nil
+	return totalItems, nil
 }
 
 func (s *ProductService) UpdateProduct(productID uuid.UUID, req *models.Product) (*models.Product, error) {
