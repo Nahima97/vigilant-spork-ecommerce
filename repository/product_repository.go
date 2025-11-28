@@ -2,7 +2,6 @@ package repository
 
 import (
 	"vigilant-spork/models"
-
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )

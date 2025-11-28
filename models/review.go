@@ -1,9 +1,8 @@
 package models
 
 import (
-	"time"
-
 	"github.com/gofrs/uuid"
+	"time"
 )
 
 type Review struct {
@@ -13,6 +12,7 @@ type Review struct {
 	Rating      int        `json:"rating"`
 	ProductID   uuid.UUID  `json:"product_id"`
 	UserID      uuid.UUID  `json:"user_id"`
+	User        User       `gorm:"foreignKey:UserID"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	DeletedAt   *time.Time `json:"deleted_at"`
