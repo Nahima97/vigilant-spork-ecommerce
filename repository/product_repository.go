@@ -12,6 +12,7 @@ type ProductRepository interface {
 	GetProductByID(id uuid.UUID) (*models.Product, error)
 	GetProductByName(name string) (*models.Product, error)
 	GetProducts(limit int, offset int) ([]models.Product, error)
+	GetProductsMetadata() (int64, error)
 	UpdateProduct(product *models.Product) (*models.Product, error)
 	DeleteProduct(id uuid.UUID) error
 	UpdateAggregates(productID uuid.UUID, avgRating float64, reviewCount int64) error
@@ -38,8 +39,6 @@ func (r *ProductRepo) GetProductByID(id uuid.UUID) (*models.Product, error) {
 	return &product, nil
 }
 
-// func (r *ProductRepo)
-
 func (r *ProductRepo) GetProductByName(name string) (*models.Product, error) {
 	var product models.Product
 	err := db.Db.Where("name = ?", name).First(&product).Error
@@ -56,6 +55,15 @@ func (r *ProductRepo) GetProducts(limit int, offset int) ([]models.Product, erro
 		return nil, err
 	}
 	return products, nil
+}
+
+func (r *ProductRepo) GetProductsMetadata() (int64, error) {
+	var totalItems int64
+	err := db.Db.Model(&models.Product{}).Count(&totalItems).Error
+	if err != nil {
+		return 0, err 
+	}
+	return totalItems, nil
 }
 
 func (r *ProductRepo) UpdateProduct(product *models.Product) (*models.Product, error) {

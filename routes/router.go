@@ -23,6 +23,7 @@ func SetupRouter(
 	r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
 	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductByID).Methods("GET")
+	r.HandleFunc("/api/v1/products", productHandler.GetProducts).Methods("GET")
   r.HandleFunc("/products/", reviewHandler.GetReviews).Methods("GET")
 
 	// Protected routes
