@@ -3,7 +3,8 @@ package repository
 import (
 	"vigilant-spork/db"
 	"vigilant-spork/models"
-	"github.com/google/uuid"
+
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 
@@ -24,16 +25,16 @@ type ProductRepo struct {
 func (r *ProductRepo) AddProduct(product *models.Product) error {
 	err := db.Db.Create(product).Error
 	if err != nil {
-		return err 
+		return err
 	}
-	return nil 
+	return nil
 }
 
 func (r *ProductRepo) GetProductByID(id uuid.UUID) (*models.Product, error) {
 	var product models.Product
-	err := db.Db.First(&product, id).Error 
+	err := db.Db.First(&product, id).Error
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 	return &product, nil
 }
@@ -53,9 +54,9 @@ func (r *ProductRepo) GetProducts(limit int, offset int) ([]models.Product, erro
 	var products []models.Product
 	err := db.Db.Order("ID DESC").Limit(limit).Offset(offset).Find(&products).Error
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
-	return products, nil 
+	return products, nil
 }
 
 func (r *ProductRepo) UpdateProduct(product *models.Product) (*models.Product, error) {
@@ -79,7 +80,7 @@ func (r *ProductRepo) DeleteProduct(id uuid.UUID) error {
 
 	err := db.Db.Where("id = ?", id).Delete(&product).Error
 	if err != nil {
-		return err 
+		return err
 	}
 	return nil
 }
