@@ -12,7 +12,7 @@ type ReviewRepository interface {
 	CreateReview(review *models.Review) error
 	GetReviewsByProductID(productID uuid.UUID) ([]models.Review, error)
 	GetReviewByUserForProduct(userID, productID uuid.UUID) (*models.Review, error)
-	GetReviewByID(reviewID uuid.UUID) (*models.Review, error) 
+	GetReviewByID(reviewID uuid.UUID) (*models.Review, error)
 	UpdateReview(review *models.Review) error
 	DeleteReview(id uuid.UUID) error
 	CalculateProductReviewAggregates(productID uuid.UUID) (avg float64, count int64, err error)

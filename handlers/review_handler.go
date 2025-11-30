@@ -117,27 +117,26 @@ func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 
 // GetReviews handles GET /products/{product_id}/reviews
 func (h *ReviewHandler) GetReviews(w http.ResponseWriter, r *http.Request) {
-    // vars := mux.Vars(r)
+	// vars := mux.Vars(r)
 	// r.URL.Query().Get("product_id")
-    productID, err := uuid.FromString(r.URL.Query().Get("productID"))
-    if err != nil {
-        http.Error(w, "invalid product ID", http.StatusBadRequest)
-        return
-    }
+	productID, err := uuid.FromString(r.URL.Query().Get("productID"))
+	if err != nil {
+		http.Error(w, "invalid product ID", http.StatusBadRequest)
+		return
+	}
 
-    // Fetch all reviews for this product
-    reviews, err := h.Service.GetReviewsForProduct(productID)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	// Fetch all reviews for this product
+	reviews, err := h.Service.GetReviewsForProduct(productID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-    // If no reviews exist, just return an empty slice (not nil)
-    if reviews == nil {
-        reviews = []models.Review{}
-    }
+	// If no reviews exist, just return an empty slice (not nil)
+	if reviews == nil {
+		reviews = []models.Review{}
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(reviews)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reviews)
 }
-
