@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"vigilant-spork/db"
 	"vigilant-spork/handlers"
 	"vigilant-spork/repository"
 	"vigilant-spork/routes"
 	"vigilant-spork/services"
-	"log"
-	"net/http"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 	productService := &services.ProductService{ProductRepo: productRepo}
 	cartService := &services.CartService{CartRepo: cartRepo}
 	orderService := &services.OrderService{OrderRepo: orderRepo}
-	reviewService := &services.ReviewService{ReviewRepo: reviewRepo}
+	reviewService := services.NewReviewService(reviewRepo, productRepo)
 
 	userHandler := &handlers.UserHandler{Service: userService}
 	productHandler := &handlers.ProductHandler{Service: productService}

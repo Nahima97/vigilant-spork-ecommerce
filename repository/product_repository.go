@@ -14,6 +14,7 @@ type ProductRepository interface {
 	GetProducts(limit int, offset int) ([]models.Product, error)
 	UpdateProduct(product *models.Product) (*models.Product, error)
 	DeleteProduct(id uuid.UUID) error
+	UpdateAggregates(productID uuid.UUID, avgRating float64, reviewCount int64) error
 }
 
 type ProductRepo struct {
@@ -81,4 +82,11 @@ func (r *ProductRepo) DeleteProduct(id uuid.UUID) error {
 		return err 
 	}
 	return nil
+}
+func (r *ProductRepo) UpdateAggregates(productID uuid.UUID, avgRating float64, reviewCount int64) error {
+	return r.Db.Model(&models.Product{}).Where("id = ?", productID).
+		Updates(map[string]interface{}{
+			"rating":       avgRating,
+			"review_count": reviewCount,
+		}).Error
 }
