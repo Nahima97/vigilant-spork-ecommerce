@@ -2,20 +2,25 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
 	"net/http"
 	"vigilant-spork/middleware"
 	"vigilant-spork/models"
 	"vigilant-spork/services"
-
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
 )
 
 type ReviewHandler struct {
 	Service *services.ReviewService
 }
 
-// SubmitReview handles POST /products/{product_id}/reviews
+type ReviewResponse struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Rating      int    `json:"rating"`
+	Name        string `json:"user_name"`
+}
+
 func (h *ReviewHandler) SubmitReview(w http.ResponseWriter, r *http.Request) {
 	var review models.Review
 	if err := json.NewDecoder(r.Body).Decode(&review); err != nil {
@@ -23,7 +28,7 @@ func (h *ReviewHandler) SubmitReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// URL param product_id
+	// Retrieves the product_id from the URL, validates it, and assigns it to the review.
 	vars := mux.Vars(r)
 	productID, err := uuid.FromString(vars["product_id"])
 	if err != nil {
@@ -32,7 +37,6 @@ func (h *ReviewHandler) SubmitReview(w http.ResponseWriter, r *http.Request) {
 	}
 	review.ProductID = productID
 
-	// Get authenticated user ID
 	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
 	review.UserID = userID
 
@@ -52,7 +56,6 @@ func (h *ReviewHandler) SubmitReview(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(review)
 }
 
-// UpdateReview handles PUT /products/{product_id}/reviews
 func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 	var update models.Review
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
@@ -89,7 +92,6 @@ func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(existing)
 }
 
-// DeleteReview handles DELETE /products/{product_id}/reviews
 func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, err := uuid.FromString(vars["product_id"])
@@ -100,7 +102,6 @@ func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
 
-	// Fetch existing review
 	existing, err := h.Service.GetReviewByUserForProduct(userID, productID)
 	if err != nil {
 		http.Error(w, "review not found", http.StatusNotFound)
@@ -115,28 +116,36 @@ func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GetReviews handles GET /products/{product_id}/reviews
 func (h *ReviewHandler) GetReviews(w http.ResponseWriter, r *http.Request) {
-	// vars := mux.Vars(r)
-	// r.URL.Query().Get("product_id")
-	productID, err := uuid.FromString(r.URL.Query().Get("productID"))
+	vars := mux.Vars(r)
+	productID, err := uuid.FromString(vars["productID"])
 	if err != nil {
 		http.Error(w, "invalid product ID", http.StatusBadRequest)
 		return
 	}
 
-	// Fetch all reviews for this product
 	reviews, err := h.Service.GetReviewsForProduct(productID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// If no reviews exist, just return an empty slice (not nil)
 	if reviews == nil {
 		reviews = []models.Review{}
 	}
 
+	// Map reviews to ReviewResponse
+	var reviewResponses []ReviewResponse
+	for _, r := range reviews {
+		rr := ReviewResponse{
+			Title:       r.Title,
+			Description: r.Description,
+			Rating:      r.Rating,
+			Name:        r.User.Name,
+		}
+		reviewResponses = append(reviewResponses, rr)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(reviews)
+	json.NewEncoder(w).Encode(reviewResponses)
 }

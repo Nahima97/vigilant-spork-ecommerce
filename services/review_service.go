@@ -2,12 +2,11 @@ package services
 
 import (
 	"errors"
+	"github.com/gofrs/uuid"
 	"sync"
 	"time"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
-
-	"github.com/gofrs/uuid"
 )
 
 type ReviewService struct {
@@ -23,7 +22,6 @@ var (
 	ErrReviewNotFound    = errors.New("review not found")
 )
 
-// Creates a new ReviewService
 func NewReviewService(reviewRepo repository.ReviewRepository, productRepo repository.ProductRepository) *ReviewService {
 	return &ReviewService{
 		ReviewRepo:  reviewRepo,
@@ -32,14 +30,13 @@ func NewReviewService(reviewRepo repository.ReviewRepository, productRepo reposi
 	}
 }
 
-// SubmitReview creates or updates a user's review for a product
 func (s *ReviewService) SubmitReview(review *models.Review) error {
 	if review.Rating < 1 || review.Rating > 5 {
 		return ErrInvalidRating
 	}
 
 	// Rate limiting: max 5 reviews per user per minute
-	s.mu.Lock()
+	s.mu.Lock() // This prevents multiple goroutines from modifying the rateLimiter at the same time
 	now := time.Now()
 	timestamps := s.rateLimiter[review.UserID]
 	var recent []time.Time
@@ -48,6 +45,7 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 			recent = append(recent, t)
 		}
 	}
+	// If the User already submitted 5 reviews in the last min then reject their request
 	if len(recent) >= 5 {
 		s.mu.Unlock()
 		return ErrRateLimitExceeded
@@ -79,7 +77,6 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 	return s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
 }
 
-// UpdateReview allows a user to update their existing review
 func (s *ReviewService) UpdateReview(review *models.Review) error {
 	existing, err := s.ReviewRepo.GetReviewByUserForProduct(review.UserID, review.ProductID)
 	if err != nil || existing == nil {
@@ -102,9 +99,7 @@ func (s *ReviewService) UpdateReview(review *models.Review) error {
 	return s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
 }
 
-// DeleteReview allows a user to delete their review
 func (s *ReviewService) DeleteReview(reviewID uuid.UUID) error {
-	// Get review to find productID
 	review, err := s.ReviewRepo.GetReviewByID(reviewID)
 	if err != nil || review == nil {
 		return ErrReviewNotFound
@@ -114,7 +109,6 @@ func (s *ReviewService) DeleteReview(reviewID uuid.UUID) error {
 		return err
 	}
 
-	// Update aggregates
 	avg, count, err := s.ReviewRepo.CalculateProductReviewAggregates(review.ProductID)
 	if err != nil {
 		return err
@@ -122,12 +116,10 @@ func (s *ReviewService) DeleteReview(reviewID uuid.UUID) error {
 	return s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
 }
 
-// GetReviewsForProduct fetches all reviews for a product
 func (s *ReviewService) GetReviewsForProduct(productID uuid.UUID) ([]models.Review, error) {
 	return s.ReviewRepo.GetReviewsByProductID(productID)
 }
 
-// GetReviewByUserForProduct fetches a review by a user for a specific product
 func (s *ReviewService) GetReviewByUserForProduct(userID, productID uuid.UUID) (*models.Review, error) {
 	return s.ReviewRepo.GetReviewByUserForProduct(userID, productID)
 }

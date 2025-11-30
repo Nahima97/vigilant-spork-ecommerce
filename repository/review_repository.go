@@ -1,11 +1,10 @@
 package repository
 
 import (
-	"vigilant-spork/db"
-	"vigilant-spork/models"
-
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
+	"vigilant-spork/db"
+	"vigilant-spork/models"
 )
 
 type ReviewRepository interface {
@@ -22,7 +21,6 @@ type ReviewRepo struct {
 	Db *gorm.DB
 }
 
-// Constructor
 func NewReviewRepository(db *gorm.DB) ReviewRepository {
 	return &ReviewRepo{Db: db}
 }
@@ -33,8 +31,10 @@ func (r *ReviewRepo) CreateReview(review *models.Review) error {
 
 func (r *ReviewRepo) GetReviewsByProductID(productID uuid.UUID) ([]models.Review, error) {
 	var reviews []models.Review
-	err := db.Db.Where("product_id = ?", productID).Order("created_at DESC").Find(&reviews).Error
-	return reviews, err
+	if err := r.Db.Preload("User").Where("product_id = ?", productID).Find(&reviews).Error; err != nil {
+		return nil, err
+	}
+	return reviews, nil
 }
 
 func (r *ReviewRepo) GetReviewByUserForProduct(userID, productID uuid.UUID) (*models.Review, error) {
@@ -46,7 +46,6 @@ func (r *ReviewRepo) GetReviewByUserForProduct(userID, productID uuid.UUID) (*mo
 	return &review, nil
 }
 
-// NEW method to fetch by review ID
 func (r *ReviewRepo) GetReviewByID(reviewID uuid.UUID) (*models.Review, error) {
 	var review models.Review
 	err := db.Db.First(&review, "id = ?", reviewID).Error

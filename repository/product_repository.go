@@ -3,7 +3,6 @@ package repository
 import (
 	"vigilant-spork/db"
 	"vigilant-spork/models"
-
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
