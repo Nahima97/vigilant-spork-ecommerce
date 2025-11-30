@@ -3,55 +3,52 @@ package services
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
+
+	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 type ProductService struct {
 	ProductRepo repository.ProductRepository
 }
 
-func (s *ProductService) AddProduct(products []models.Product) error {
-	for _, product := range products {
-		if product.Name == "" {
-			return errors.New("product name is required")
-		}
-
-		if product.Description == "" {
-			return errors.New("product description is required")
-		}
-
-		if product.Category == "" {
-			return errors.New("product category is required")
-		}
-
-		if product.Price == 0 {
-			return errors.New("product price is required and cannot be 0")
-		}
-
-		if product.StockQuantity == 0 {
-			return errors.New("stock quantity is required and cannot be 0")
-		}
-
-		product.ID = uuid.New()
-
-		existingProduct, err := s.ProductRepo.GetProductByName(product.Name)
-		if err == nil && existingProduct != nil {
-			return errors.New("product already exists")
-		}
-
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("failed to check product existence: %w", err)
-		}
-
-		err = s.ProductRepo.AddProduct(&product)
-		if err != nil {
-			return err
-		}
+func (s *ProductService) AddProduct(product *models.Product) error {
+	if product.Name == "" {
+		return errors.New("product name is required")
 	}
 
+	if product.Description == "" {
+		return errors.New("product description is required")
+	}
+
+	if product.Category == "" {
+		return errors.New("product category is required")
+	}
+
+	if product.Price == 0 {
+		return errors.New("product price is required and cannot be 0")
+	}
+
+	if product.StockQuantity == 0 {
+		return errors.New("stock quantity is required and cannot be 0")
+	}
+
+	existingProduct, err := s.ProductRepo.GetProductByID(product.ID)
+	if err == nil && existingProduct != nil {
+		return errors.New("product already exists")
+	}
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to check product existence: %w", err)
+	}
+
+	err = s.ProductRepo.AddProduct(product)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -71,14 +68,6 @@ func (s *ProductService) GetProducts(page int, limit int) ([]models.Product, err
 		return nil, err
 	}
 	return products, nil
-}
-
-func (s *ProductService) GetTotalItems() (int64, error) {
-	totalItems, err := s.ProductRepo.GetProductsMetadata()
-	if err != nil {
-		return 0, err
-	}
-	return totalItems, nil
 }
 
 func (s *ProductService) UpdateProduct(productID uuid.UUID, req *models.Product) (*models.Product, error) {

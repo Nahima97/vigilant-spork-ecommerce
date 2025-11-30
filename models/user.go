@@ -1,9 +1,8 @@
 package models
 
 import (
-	"time"
-
 	"github.com/gofrs/uuid"
+	"time"
 )
 
 type User struct {
