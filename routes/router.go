@@ -24,12 +24,12 @@ func SetupRouter(
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
 	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductByID).Methods("GET")
 	r.HandleFunc("/api/v1/products", productHandler.GetProducts).Methods("GET")
-  r.HandleFunc("/products/", reviewHandler.GetReviews).Methods("GET")
+	r.HandleFunc("/products/", reviewHandler.GetReviews).Methods("GET")
 
 	// Protected routes
-    secret := os.Getenv("JWT_SECRET")
-    protected := r.PathPrefix("/api/v1").Subrouter()
-    protected.Use(middleware.AuthMiddleware(secret))
+	secret := os.Getenv("JWT_SECRET")
+	protected := r.PathPrefix("/api/v1").Subrouter()
+	protected.Use(middleware.AuthMiddleware(secret))
 
 	protected.HandleFunc("/products/{product_id}/review", reviewHandler.SubmitReview).Methods("POST")
 	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.UpdateReview).Methods("PUT")

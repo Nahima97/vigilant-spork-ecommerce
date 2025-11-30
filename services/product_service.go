@@ -8,7 +8,6 @@ import (
 	"vigilant-spork/repository"
 
 	"github.com/gofrs/uuid"
-	"gorm.io/gorm"
 )
 
 type ProductService struct {
