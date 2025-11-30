@@ -2,11 +2,11 @@ package services
 
 import (
 	"errors"
+	"os"
 	"regexp"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
 	"vigilant-spork/utils"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -66,10 +66,11 @@ func (s *UserService) Login(login *models.User) (string, error) {
 		return "", err
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Role)
+	var secret = os.Getenv("JWT_SECRET")
+
+	token, err := utils.GenerateJWT(secret, user.ID, user.Role)
 	if err != nil {
 		return "", err
 	}
 	return token, nil
-
 }
