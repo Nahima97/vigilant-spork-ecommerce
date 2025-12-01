@@ -1,15 +1,17 @@
 package repository
 
 import (
+	"errors"
+	"gorm.io/gorm"
 	"vigilant-spork/db"
 	"vigilant-spork/models"
-
-	"gorm.io/gorm"
 )
 
 type UserRepository interface {
 	GetUserByEmail(email string) (*models.User, error)
 	CreateUser(user *models.User) error
+	AddTokenToBlacklist(token string) error
+	IsTokenBlacklisted(token string) (bool, error)
 }
 
 type UserRepo struct {
@@ -29,21 +31,21 @@ func (r *UserRepo) CreateUser(user *models.User) error {
 	return db.Db.Create(user).Error
 }
 
-//SEVI
-
 func (r *UserRepo) AddTokenToBlacklist(token string) error {
-	entry := models.BlacklistedToken{
-		Token: token,
+	var entry models.BlacklistedToken
+	entry.Token = token
+	return db.Db.Create(&entry).Error
+}
+
+func (r *UserRepo) IsTokenBlacklisted(token string) (bool, error) {
+	var entry models.BlacklistedToken
+	err := db.Db.Where("token = ?", token).First(&entry).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
 	}
-	return r.Db.Create(&entry).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
-
-func (r *UserRepo) IsTokenBlacklisted(token string) bool {
-	var count int64
-	r.Db.Model(&models.BlacklistedToken{}).
-		Where("token = ?", token).
-		Count(&count)
-	return count > 0
-}
-
-

@@ -2,11 +2,11 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
-	"github.com/golang-jwt/jwt"
+	"vigilant-spork/utils"
+
 	"golang.org/x/crypto/bcrypt"
 	
 )
@@ -59,17 +59,34 @@ func isValidEmail(email string) bool {
 	return regex.MatchString(email)
 }
 
-func (s *UserService) RevokeSession(tokenString string) error {
-    token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-        if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-            return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-        }
-        return []byte(s.secret), nil
-    })
+func (s *UserService) Login(login *models.User) (string, error) {
+	
+	user, err := s.UserRepo.GetUserByEmail(login.Email)
+	if err != nil {
+		return "", err
+	}
 
-    if err != nil || !token.Valid {
-        return errors.New("invalid or expired token")
-    }
+	err = utils.ComparePassword(user.Password, login.Password)
+	if err != nil {
+		return "", err
+	}
 
-    return s.UserRepo.AddTokenToBlacklist(tokenString)
+	token, err := utils.GenerateJWT(user.ID, user.Role)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+
 }
+func (s *UserService) AddTokenToBlacklist(token string) error {
+    return s.UserRepo.AddTokenToBlacklist(token)
+}
+
+func (s *UserService) IsTokenBlacklisted(token string)(bool, error) {
+    return s.UserRepo.IsTokenBlacklisted(token)
+}
+
+
+
+
+

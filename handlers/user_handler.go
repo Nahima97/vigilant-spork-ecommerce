@@ -3,8 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
+	"vigilant-spork/middleware"
 	"vigilant-spork/models"
 	"vigilant-spork/services"
 )
@@ -12,6 +13,10 @@ import (
 type UserHandler struct {
 	Service *services.UserService
 }
+
+type contextKey string
+
+const JWTTokenKey contextKey = "jwtTokenString"
 
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var signUp models.User
@@ -37,22 +42,39 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(signUp)
 }
 
-func (h *UserHandler) Logout(c *gin.Context) {
-	// Get the raw token string from the context
-	tokenValue, exists := c.Get("jwtTokenString")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "no token found"})
-		return
-	}
-
-	tokenString := tokenValue.(string)
-
-	// Call the service to revoke session (blacklist)
-	err := h.Service.RevokeSession(tokenString)
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var login models.User
+	err := json.NewDecoder(r.Body).Decode(&login)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to revoke session"})
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
+	token, err := h.Service.Login(&login)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(token)
+}
+
+func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	token := middleware.GetToken(r.Context())
+	fmt.Println(token)
+	if token == "" {
+		http.Error(w, "no token found", http.StatusUnauthorized)
+		return
+	}
+
+	// Call service to blacklist the token
+	err := h.Service.UserRepo.AddTokenToBlacklist(token)
+	if err != nil {
+		http.Error(w, "failed to blacklist token", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("logged out successfully"))
 }
