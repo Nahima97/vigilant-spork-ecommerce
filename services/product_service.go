@@ -14,40 +14,42 @@ type ProductService struct {
 	ProductRepo repository.ProductRepository
 }
 
-func (s *ProductService) AddProduct(product *models.Product) error {
-	if product.Name == "" {
-		return errors.New("product name is required")
-	}
+func (s *ProductService) AddProduct(products []models.Product) error {
+	for _, product := range products {
+		if product.Name == "" {
+			return errors.New("product name is required")
+		}
 
-	if product.Description == "" {
-		return errors.New("product description is required")
-	}
+		if product.Description == "" {
+			return errors.New("product description is required")
+		}
 
-	if product.Category == "" {
-		return errors.New("product category is required")
-	}
+		if product.Category == "" {
+			return errors.New("product category is required")
+		}
 
-	if product.Price == 0 {
-		return errors.New("product price is required and cannot be 0")
-	}
+		if product.Price == 0 {
+			return errors.New("product price is required and cannot be 0")
+		}
 
-	if product.StockQuantity == 0 {
-		return errors.New("stock quantity is required and cannot be 0")
-	}
+		if product.StockQuantity == 0 {
+			return errors.New("stock quantity is required and cannot be 0")
+		}
 
-	existingProduct, err := s.ProductRepo.GetProductByID(product.ID)
-	if err == nil && existingProduct != nil {
-		return errors.New("product already exists")
-	}
+		existingProduct, err := s.ProductRepo.GetProductByName(product.Name)
+		if err == nil && existingProduct != nil {
+			return fmt.Errorf("product with name %q already exists", product.Name)
+		}
 
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to check product existence: %w", err)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("failed to check product existence: %w", err)
+		}
 	}
-
-	err = s.ProductRepo.AddProduct(product)
+	err := s.ProductRepo.AddProduct(products)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -59,14 +61,22 @@ func (s *ProductService) GetProductByID(productID uuid.UUID) (*models.Product, e
 	return product, nil
 }
 
-func (s *ProductService) GetProducts(page int, limit int) ([]models.Product, error) {
+func (s *ProductService) GetProducts(page int, limit int, minPrice int, maxPrice int, category string) ([]models.Product, error) {
 	offset := (page - 1) * limit
 
-	products, err := s.ProductRepo.GetProducts(limit, offset)
+	products, err := s.ProductRepo.GetProducts(limit, offset, minPrice, maxPrice, category)
 	if err != nil {
 		return nil, err
 	}
 	return products, nil
+}
+
+func (s *ProductService) GetTotalItems() (int64, error) {
+	totalItems, err := s.ProductRepo.GetProductsMetadata()
+	if err != nil {
+		return 0, err
+	}
+	return totalItems, nil
 }
 
 func (s *ProductService) UpdateProduct(productID uuid.UUID, req *models.Product) (*models.Product, error) {

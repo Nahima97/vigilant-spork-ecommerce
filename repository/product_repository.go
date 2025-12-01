@@ -1,17 +1,17 @@
 package repository
 
 import (
-	"vigilant-spork/db"
-	"vigilant-spork/models"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
+	"vigilant-spork/db"
+	"vigilant-spork/models"
 )
 
 type ProductRepository interface {
-	AddProduct(product *models.Product) error
+	AddProduct(product []models.Product) error
 	GetProductByID(id uuid.UUID) (*models.Product, error)
 	GetProductByName(name string) (*models.Product, error)
-	GetProducts(limit int, offset int) ([]models.Product, error)
+	GetProducts(limit int, offset int, minPrice int, maxPrice int, category string) ([]models.Product, error)
 	GetProductsMetadata() (int64, error)
 	UpdateProduct(product *models.Product) (*models.Product, error)
 	DeleteProduct(id uuid.UUID) error
@@ -22,10 +22,12 @@ type ProductRepo struct {
 	Db *gorm.DB
 }
 
-func (r *ProductRepo) AddProduct(product *models.Product) error {
-	err := db.Db.Create(product).Error
-	if err != nil {
-		return err
+func (r *ProductRepo) AddProduct(products []models.Product) error {
+	for i := range products {
+		err := db.Db.Create(&products[i]).Error
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -48,9 +50,14 @@ func (r *ProductRepo) GetProductByName(name string) (*models.Product, error) {
 	return &product, nil
 }
 
-func (r *ProductRepo) GetProducts(limit int, offset int) ([]models.Product, error) {
+func (r *ProductRepo) GetProducts(limit int, offset int, minPrice int, maxPrice int, category string) ([]models.Product, error) {
 	var products []models.Product
-	err := db.Db.Order("ID DESC").Limit(limit).Offset(offset).Find(&products).Error
+	query := db.Db.Where("price BETWEEN ? AND ?", minPrice, maxPrice)
+
+	if category != "" {
+		query = query.Where("LOWER(category) = LOWER(?)", category)
+	}
+	err := query.Order("ID DESC").Limit(limit).Offset(offset).Find(&products).Error
 	if err != nil {
 		return nil, err
 	}
@@ -61,13 +68,12 @@ func (r *ProductRepo) GetProductsMetadata() (int64, error) {
 	var totalItems int64
 	err := db.Db.Model(&models.Product{}).Count(&totalItems).Error
 	if err != nil {
-		return 0, err 
+		return 0, err
 	}
 	return totalItems, nil
 }
 
 func (r *ProductRepo) UpdateProduct(product *models.Product) (*models.Product, error) {
-
 	err := db.Db.Model(&models.Product{}).Where("id = ?", product.ID).Updates(product).Error
 	if err != nil {
 		return nil, err
