@@ -8,11 +8,16 @@ import (
 	"vigilant-spork/repository"
 	"vigilant-spork/utils"
 	"golang.org/x/crypto/bcrypt"
+	
 )
 
 type UserService struct {
 	UserRepo repository.UserRepository
+	secret string
 }
+
+
+
 // error for duplicate email
 var ErrEmailExists = errors.New("email already registered")
 
@@ -73,4 +78,14 @@ func (s *UserService) Login(login *models.User) (string, error) {
 		return "", err
 	}
 	return token, nil
+
 }
+func (s *UserService) AddTokenToBlacklist(token string) error {
+    return s.UserRepo.AddTokenToBlacklist(token)
+}
+
+
+
+
+
+

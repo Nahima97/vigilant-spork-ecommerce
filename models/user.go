@@ -17,3 +17,9 @@ type User struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at"`
 }
+
+
+type BlacklistedToken struct {
+    Token     string    `gorm:"primaryKey"`
+    CreatedAt time.Time
+}

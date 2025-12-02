@@ -33,7 +33,7 @@ func main() {
 	orderHandler := &handlers.OrderHandler{Service: orderService}
 	reviewHandler := &handlers.ReviewHandler{Service: reviewService}
 
-	r := routes.SetupRouter(userHandler, productHandler, cartHandler, orderHandler, reviewHandler)
+	r := routes.SetupRouter(userHandler, productHandler, cartHandler, orderHandler, reviewHandler, userService)
 
 	err := http.ListenAndServe(":8080", r)
 	if err != nil {
