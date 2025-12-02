@@ -2,15 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
 	"math"
 	"net/http"
 	"strconv"
 	"vigilant-spork/middleware"
 	"vigilant-spork/models"
 	"vigilant-spork/services"
-
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
 )
 
 type ProductHandler struct {
@@ -23,6 +22,8 @@ type ProductResponse struct {
 	Price       float64 `json:"price"`
 	Stock       int     `json:"stock"`
 	Data        string  `json:"data"`
+	Rating      int     `json:"rating"`
+	Reviews     []string `json:"reviews"`
 }
 
 func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {

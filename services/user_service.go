@@ -2,21 +2,18 @@ package services
 
 import (
 	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"os"
 	"regexp"
+	"vigilant-spork/middleware"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
 	"vigilant-spork/utils"
-	"golang.org/x/crypto/bcrypt"
-	
 )
 
 type UserService struct {
 	UserRepo repository.UserRepository
-	secret string
 }
-
-
 
 // error for duplicate email
 var ErrEmailExists = errors.New("email already registered")
@@ -60,7 +57,6 @@ func isValidEmail(email string) bool {
 }
 
 func (s *UserService) Login(login *models.User) (string, error) {
-	
 	user, err := s.UserRepo.GetUserByEmail(login.Email)
 	if err != nil {
 		return "", err
@@ -73,7 +69,7 @@ func (s *UserService) Login(login *models.User) (string, error) {
 
 	var secret = os.Getenv("JWT_SECRET")
 
-	token, err := utils.GenerateJWT(secret, user.ID, user.Role)
+	token, err := middleware.GenerateJWT(secret, user.ID, user.Role)
 	if err != nil {
 		return "", err
 	}
@@ -81,11 +77,5 @@ func (s *UserService) Login(login *models.User) (string, error) {
 
 }
 func (s *UserService) AddTokenToBlacklist(token string) error {
-    return s.UserRepo.AddTokenToBlacklist(token)
+	return s.UserRepo.AddTokenToBlacklist(token)
 }
-
-
-
-
-
-

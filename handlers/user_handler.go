@@ -68,7 +68,6 @@ func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Call service to blacklist the token
 	err := h.Service.UserRepo.AddTokenToBlacklist(token)
 	if err != nil {
 		http.Error(w, "failed to blacklist token", http.StatusInternalServerError)

@@ -3,11 +3,10 @@ package services
 import (
 	"errors"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
-
-	"github.com/gofrs/uuid"
 )
 
 type ProductService struct {
@@ -49,7 +48,6 @@ func (s *ProductService) AddProduct(products []models.Product) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

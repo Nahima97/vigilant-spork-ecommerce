@@ -6,7 +6,6 @@ import (
 	"vigilant-spork/handlers"
 	"vigilant-spork/middleware"
 	"vigilant-spork/services"
-
 	"github.com/gorilla/mux"
 )
 
@@ -38,8 +37,7 @@ func SetupRouter(
 	protected.HandleFunc("/products", productHandler.AddProduct).Methods("POST")
 	protected.HandleFunc("/products/{id}", productHandler.UpdateProduct).Methods("PATCH")
 	protected.HandleFunc("/products/{id}", productHandler.DeleteProduct).Methods("DELETE")
-  protected.HandleFunc("/logout",userHandler.Logout).Methods("POST")
-
+	protected.HandleFunc("/logout", userHandler.Logout).Methods("POST")
 
 	// helpful NotFound handler
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -49,5 +47,3 @@ func SetupRouter(
 
 	return r
 }
-
-	

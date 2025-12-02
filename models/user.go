@@ -21,5 +21,5 @@ type User struct {
 
 type BlacklistedToken struct {
     Token     string    `gorm:"primaryKey"`
-    CreatedAt time.Time
+    CreatedAt time.Time `json:"created_at"`
 }
