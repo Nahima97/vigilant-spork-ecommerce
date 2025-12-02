@@ -2,10 +2,14 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
-	"vigilant-spork/services"
+	"vigilant-spork/db"
+	"vigilant-spork/models"
 	"vigilant-spork/utils"
+
+	"gorm.io/gorm"
 )
 
 type contextKey string
@@ -14,7 +18,7 @@ const UserIDKey contextKey = "userID"
 const UserRoleKey contextKey = "userRole"
 const JWTTokenKey contextKey = "jwtTokenString"
 
-func AuthMiddleware(secret string, userService *services.UserService) func(http.Handler) http.Handler {
+func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -24,7 +28,7 @@ func AuthMiddleware(secret string, userService *services.UserService) func(http.
 			}
 
 			token := strings.TrimPrefix(authHeader, "Bearer ")
-			uid, role, err := utils.ValidateJWT(token)
+			uid, role, err := utils.ValidateJWT(token, secret)
 			if err != nil {
 				utils.ErrorJSON(w, http.StatusUnauthorized, err.Error())
 				return
@@ -35,7 +39,7 @@ func AuthMiddleware(secret string, userService *services.UserService) func(http.
 			ctx = context.WithValue(ctx, UserRoleKey, role)
 			ctx = context.WithValue(ctx, JWTTokenKey, token)
 
-			isBlacklisted, err := userService.IsTokenBlacklisted(token)
+			isBlacklisted, err := IsTokenBlacklisted(token)
 			if err != nil {
 				utils.ErrorJSON(w, http.StatusInternalServerError, "error checking token")
 				return
@@ -48,6 +52,19 @@ func AuthMiddleware(secret string, userService *services.UserService) func(http.
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func IsTokenBlacklisted(token string) (bool, error) {
+	var entry models.BlacklistedToken
+	err := db.Db.Where("token = ?", token).First(&entry).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func GetUserID(ctx context.Context) int {

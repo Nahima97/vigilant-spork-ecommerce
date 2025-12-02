@@ -84,9 +84,6 @@ func (s *UserService) AddTokenToBlacklist(token string) error {
     return s.UserRepo.AddTokenToBlacklist(token)
 }
 
-func (s *UserService) IsTokenBlacklisted(token string)(bool, error) {
-    return s.UserRepo.IsTokenBlacklisted(token)
-}
 
 
 
