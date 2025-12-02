@@ -58,6 +58,7 @@ func GetUserID(ctx context.Context) int {
 	return 0
 }
 
+// GetUserRole retrieves role string from context
 func GetUserRole(ctx context.Context) string {
 	val := ctx.Value(UserRoleKey)
 	if role, ok := val.(string); ok {

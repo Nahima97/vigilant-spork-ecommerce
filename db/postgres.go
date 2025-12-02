@@ -1,13 +1,13 @@
 package db
 
 import (
-    "fmt"
-    "log"
+	"fmt"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"log"
+	"os"
 	"vigilant-spork/models"
-    "os"
-    "github.com/joho/godotenv"
-    "gorm.io/driver/postgres"
-    "gorm.io/gorm"
 )
 
 var Db *gorm.DB
@@ -34,6 +34,12 @@ func InitDb() *gorm.DB {
         log.Fatalf("Failed to connect to database: %v", err)
     }
     fmt.Println("connected to database successfully!")
+  
+  	err = Db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`).Error
+	if err != nil {
+		log.Fatal("Failed to enable uuid-ossp extension:", err)
+	}
+
 
     err = Db.AutoMigrate(&models.User{}, &models.Product{}, &models.Cart{}, &models.CartItem{}, &models.Order{}, &models.OrderItem{}, &models.Review{}, &models.BlacklistedToken{})
     if err != nil {
