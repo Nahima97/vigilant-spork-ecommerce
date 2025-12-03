@@ -17,13 +17,13 @@ type ProductHandler struct {
 }
 
 type ProductResponse struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	Stock       int     `json:"stock"`
-	Data        string  `json:"data"`
-	Rating      int     `json:"rating"`
-	Reviews     []string `json:"reviews"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	Price       float64          `json:"price"`
+	Stock       int              `json:"stock"`
+	Data        string           `json:"data"`
+	Rating      int              `json:"rating"`
+	Reviews     []ReviewResponse `json:"reviews"`
 }
 
 func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
@@ -65,12 +65,28 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	var reviews []ReviewResponse
+
+	if product.Reviews == nil {
+		reviews = []ReviewResponse{}} // "No user reviews"
+
+	for _, r := range product.Reviews {
+		reviews = append(reviews, ReviewResponse{
+			Title:       r.Title,
+			Description: r.Description,
+			Rating:      r.Rating,
+			Name:        r.User.Name,
+		})
+	}
+
 	response := ProductResponse{
 		Name:        product.Name,
 		Description: product.Description,
 		Price:       product.Price,
 		Stock:       product.StockQuantity,
 		Data:        product.Data,
+		Rating:      int(product.Rating),
+		Reviews:     reviews,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
