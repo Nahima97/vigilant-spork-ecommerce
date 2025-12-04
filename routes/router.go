@@ -38,6 +38,8 @@ func SetupRouter(
 	protected.HandleFunc("/products/{id}", productHandler.UpdateProduct).Methods("PATCH")
 	protected.HandleFunc("/products/{id}", productHandler.DeleteProduct).Methods("DELETE")
 	protected.HandleFunc("/logout", userHandler.Logout).Methods("POST")
+	protected.HandleFunc("/orders", orderHandler.GetOrderHistory).Methods("GET")
+
 
 	// helpful NotFound handler
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
