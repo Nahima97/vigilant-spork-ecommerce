@@ -22,8 +22,8 @@ type ProductResponse struct {
 	Price       float64 `json:"price"`
 	Stock       int     `json:"stock"`
 	Data        string  `json:"data"`
-	Rating      int     `json:"rating"`
-	Reviews     []string `json:"reviews"`
+	Rating      float64 `json:"rating"`
+	Reviews     []models.Review `json:"reviews"`
 }
 
 func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {

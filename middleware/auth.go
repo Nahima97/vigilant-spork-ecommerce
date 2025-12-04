@@ -100,12 +100,12 @@ func IsTokenBlacklisted(token string) (bool, error) {
 	return true, nil
 }
 
-func GetUserID(ctx context.Context) int {
+func GetUserID(ctx context.Context) uuid.UUID {
 	val := ctx.Value(UserIDKey)
-	if id, ok := val.(int); ok {
+	if id, ok := val.(uuid.UUID); ok {
 		return id
 	}
-	return 0
+	return uuid.Nil
 }
 
 func GetUserRole(ctx context.Context) string {
