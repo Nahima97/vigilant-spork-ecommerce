@@ -17,9 +17,9 @@ type OrderHandler struct {
 
 func (h *OrderHandler) MoveCartToOrder(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(r.Context())
+	userID := middleware.GetUserID(ctx)
 	if userID == uuid.Nil {
-		http.Error(w, "no userID found", http.StatusInternalServerError)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -37,5 +37,6 @@ func (h *OrderHandler) MoveCartToOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode("Order created successfully")
 }

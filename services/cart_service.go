@@ -1,7 +1,60 @@
 package services
 
-import "vigilant-spork/repository"
+import (
+	"fmt"
+	"math"
+	"vigilant-spork/repository"
+	"github.com/gofrs/uuid"
+)
 
 type CartService struct {
-    CartRepo repository.CartRepository
+	CartRepo    repository.CartRepository
+	ProductRepo repository.ProductRepository
+}
+
+func (s *CartService) AddToCart(userID, productID uuid.UUID) error {
+	cart, err := s.CartRepo.GetOrCreateCart(userID)
+	if err != nil {
+		return err
+	}
+
+	if cart == nil {
+		return fmt.Errorf("cart not found or could not be created for user")
+	}
+
+	product, err := s.ProductRepo.GetProductByID(productID)
+	if err != nil {
+		return err
+	}
+
+	if product == nil {
+		return fmt.Errorf("product not found")
+	}
+
+	product.Price = int64(math.Round(float64(product.Price) * 100))
+
+	err = s.CartRepo.AddItemToCart(productID, cart.ID)
+	if err != nil {
+		return err
+	}
+
+	items, err := s.CartRepo.GetCartItems(cart.ID)
+	if err != nil {
+		return err
+	}
+
+	if len(items) == 0 {
+		return fmt.Errorf("items not found")
+	}
+
+	total := int64(0)
+	for _, item := range items {
+		total += int64(item.Quantity) * item.UnitPrice
+	}
+
+	err = s.CartRepo.UpdateCartTotal(total, cart.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -38,6 +38,7 @@ func SetupRouter(
 	protected.HandleFunc("/products/{product_id}/review", reviewHandler.SubmitReview).Methods("POST")
 	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.UpdateReview).Methods("PUT")
 	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.DeleteReview).Methods("DELETE")
+	protected.HandleFunc("/cart/{product_id}", cartHandler.AddToCart).Methods("POST")
 	protected.HandleFunc("/checkout", orderHandler.MoveCartToOrder).Methods("POST")
 	protected.HandleFunc("/logout", userHandler.Logout).Methods("POST")
 

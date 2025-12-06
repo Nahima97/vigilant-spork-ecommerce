@@ -37,6 +37,12 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
+			userUUID, err := uuid.FromString(uid)
+			if err != nil {
+				utils.ErrorJSON(w, http.StatusUnauthorized, "invalid user ID in token")
+				return
+			}
+
 			isBlacklisted, err := IsTokenBlacklisted(token)
 			if err != nil {
 				utils.ErrorJSON(w, http.StatusInternalServerError, "error checking token")
@@ -48,7 +54,7 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), UserIDKey, uid)
+			ctx := context.WithValue(r.Context(), UserIDKey, userUUID)
 			ctx = context.WithValue(ctx, UserRoleKey, role)
 			ctx = context.WithValue(ctx, JWTTokenKey, token)
 

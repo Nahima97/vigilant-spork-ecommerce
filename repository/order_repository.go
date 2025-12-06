@@ -14,8 +14,12 @@ type OrderRepository interface {
 	GetCart(ctx context.Context, userID uuid.UUID) (*models.Cart, error)
 	VerifyAndDeductStock(ctx context.Context, cartItem *models.CartItem) error
 	CreateOrder(ctx context.Context, userID uuid.UUID) (*models.Order, error)
+	GetOrder(ctx context.Context, userID uuid.UUID) (*models.Order, error)
+	UpdateOrder(ctx context.Context, order *models.Order) error
 	MoveCartItemsToOrder(ctx context.Context, orderID uuid.UUID, cartID uuid.UUID) error
 	ClearCart(ctx context.Context, cartID uuid.UUID) error
+	GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]models.OrderItem, error)
+	UpdateOrderTotal(ctx context.Context, total int64, orderID uuid.UUID) error
 }
 
 type OrderRepo struct {
@@ -49,9 +53,9 @@ func (r *OrderRepo) Transaction(ctx context.Context, fn func(repo OrderRepositor
 }
 
 func (r *OrderRepo) GetCart(ctx context.Context, userID uuid.UUID) (*models.Cart, error) {
-	var cart models.Cart
 	db := r.Db.WithContext(ctx)
-	err := db.Where("user_id = ?", userID).First(&cart).Error
+	var cart models.Cart
+	err := db.Preload("Items").Where("user_id = ?", userID).First(&cart).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -61,10 +65,9 @@ func (r *OrderRepo) GetCart(ctx context.Context, userID uuid.UUID) (*models.Cart
 	return &cart, nil
 }
 
-
 func (r *OrderRepo) VerifyAndDeductStock(ctx context.Context, cartItem *models.CartItem) error {
-	var product models.Product
 	db := r.Db.WithContext(ctx)
+	var product models.Product
 	err := db.Model(&models.Product{}).Where("id = ?", cartItem.ProductID).Clauses(clause.Locking{Strength: "UPDATE"}).First(&product).Error
 	if err != nil {
 		return err
@@ -83,9 +86,12 @@ func (r *OrderRepo) VerifyAndDeductStock(ctx context.Context, cartItem *models.C
 }
 
 func (r *OrderRepo) CreateOrder(ctx context.Context, userID uuid.UUID) (*models.Order, error) {
-	var order models.Order
-	order.UserID = userID
 	db := r.Db.WithContext(ctx)
+	var order = models.Order{
+		UserID: userID,
+		Total:  0,
+		Status: "PENDING",
+	}
 	err := db.Create(&order).Error
 	if err != nil {
 		return nil, err
@@ -93,9 +99,28 @@ func (r *OrderRepo) CreateOrder(ctx context.Context, userID uuid.UUID) (*models.
 	return &order, nil
 }
 
-func (r *OrderRepo) MoveCartItemsToOrder(ctx context.Context, orderID uuid.UUID, cartID uuid.UUID) error {
-	var cartItems []models.CartItem
+func (r *OrderRepo) GetOrder(ctx context.Context, userID uuid.UUID) (*models.Order, error) {
 	db := r.Db.WithContext(ctx)
+	var order models.Order
+	err := db.Where("user_id = ?", userID).Create(&order).Error
+	if err != nil {
+		return nil, err
+	}
+	return &order, nil
+}
+
+func (r *OrderRepo) UpdateOrder(ctx context.Context, order *models.Order) error {
+	db := r.Db.WithContext(ctx)
+	err := db.Where("id = ?", order.ID).Updates(order).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OrderRepo) MoveCartItemsToOrder(ctx context.Context, orderID uuid.UUID, cartID uuid.UUID) error {
+	db := r.Db.WithContext(ctx)
+	var cartItems []models.CartItem
 	err := db.Where("cart_id = ?", cartID).Find(&cartItems).Error
 	if err != nil {
 		return err
@@ -103,6 +128,12 @@ func (r *OrderRepo) MoveCartItemsToOrder(ctx context.Context, orderID uuid.UUID,
 
 	if len(cartItems) == 0 {
 		return nil
+	}
+
+	var order models.Order
+	err = db.Where("id = ?", orderID).Find(&order).Error
+	if err != nil {
+		return err
 	}
 
 	var orderItems []models.OrderItem
@@ -120,12 +151,37 @@ func (r *OrderRepo) MoveCartItemsToOrder(ctx context.Context, orderID uuid.UUID,
 	if err != nil {
 		return err
 	}
+
+	err = db.Save(&order).Error
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (r *OrderRepo) ClearCart(ctx context.Context, cartID uuid.UUID) error {
 	db := r.Db.WithContext(ctx)
 	err := db.Where("cart_id = ?", cartID).Delete(&models.CartItem{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OrderRepo) GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]models.OrderItem, error) {
+	db := r.Db.WithContext(ctx)
+	var items []models.OrderItem
+	err := db.Where("order_id = ?", orderID).Find(&items).Error
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+func (r *OrderRepo) UpdateOrderTotal(ctx context.Context, total int64, orderID uuid.UUID) error {
+	db := r.Db.WithContext(ctx)
+	err := db.Model(&models.Order{}).Where("id = ?", orderID).Update("total", total).Error
 	if err != nil {
 		return err
 	}
