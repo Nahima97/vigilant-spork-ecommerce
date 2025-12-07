@@ -14,7 +14,7 @@ type Product struct {
 	StockQuantity int        `json:"stockQuantity"`
 	Rating        int        `json:"rating"`
 	ReviewCount   int64      `json:"reviewCount"`
-	Reviews       []Review   `gorm:"foreignKey:ProductID" json:"reviews"`
+	Reviews       []Review   `gorm:"foreignKey:ProductID" json:"reviews,omitempty"`
 	Data          string     `json:"data"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`

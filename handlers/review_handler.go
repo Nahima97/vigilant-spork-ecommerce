@@ -28,7 +28,6 @@ func (h *ReviewHandler) SubmitReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retrieves the product_id from the URL, validates it, and assigns it to the review.
 	vars := mux.Vars(r)
 	productID, err := uuid.FromString(vars["product_id"])
 	if err != nil {
@@ -79,7 +78,6 @@ func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update fields
 	existing.Title = update.Title
 	existing.Description = update.Description
 	existing.Rating = update.Rating
@@ -118,7 +116,7 @@ func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 
 func (h *ReviewHandler) GetReviews(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	productID, err := uuid.FromString(vars["productID"])
+	productID, err := uuid.FromString(vars["product_id"])
 	if err != nil {
 		http.Error(w, "invalid product ID", http.StatusBadRequest)
 		return
@@ -134,7 +132,6 @@ func (h *ReviewHandler) GetReviews(w http.ResponseWriter, r *http.Request) {
 		reviews = []models.Review{}
 	}
 
-	// Map reviews to ReviewResponse
 	var reviewResponses []ReviewResponse
 	for _, r := range reviews {
 		rr := ReviewResponse{

@@ -34,7 +34,7 @@ func (r *ProductRepo) AddProduct(products []models.Product) error {
 
 func (r *ProductRepo) GetProductByID(id uuid.UUID) (*models.Product, error) {
 	var product models.Product
-	err := db.Db.First(&product, id).Error
+	err := db.Db.Preload("Reviews.User").First(&product, id).Error
 	if err != nil {
 		return nil, err
 	}
