@@ -2,9 +2,10 @@ package services
 
 import (
 	"fmt"
-	"math"
-	"vigilant-spork/repository"
 	"github.com/gofrs/uuid"
+	"math"
+	"vigilant-spork/models"
+	"vigilant-spork/repository"
 )
 
 type CartService struct {
@@ -57,4 +58,21 @@ func (s *CartService) AddToCart(userID, productID uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+func (s *CartService) ViewCart(userID uuid.UUID) (*models.Cart, error) {
+	cart, err := s.CartRepo.GetCartByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var total int64
+	for i := range cart.Items {
+		item := &cart.Items[i]
+		item.UnitPrice = item.Product.Price
+		total += int64(item.Quantity) * item.UnitPrice
+	}
+	cart.Total = total
+
+	return cart, nil
 }

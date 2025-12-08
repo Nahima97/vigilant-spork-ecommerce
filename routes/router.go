@@ -23,6 +23,7 @@ func SetupRouter(
 	r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
 	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductByID).Methods("GET")
+	
 	r.HandleFunc("/api/v1/products", productHandler.GetProducts).Methods("GET")
 	r.HandleFunc("/products/{product_id}/reviews", reviewHandler.GetReviews).Methods("GET")
 
@@ -41,6 +42,7 @@ func SetupRouter(
 	protected.HandleFunc("/cart/{product_id}", cartHandler.AddToCart).Methods("POST")
 	protected.HandleFunc("/checkout", orderHandler.MoveCartToOrder).Methods("POST")
 	protected.HandleFunc("/logout", userHandler.Logout).Methods("POST")
+	protected.HandleFunc("/cart", cartHandler.ViewCart).Methods("GET")
 
 	// helpful NotFound handler
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
