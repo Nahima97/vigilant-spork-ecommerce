@@ -77,13 +77,7 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
-
-	response := ProductResponse{
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       fmt.Sprintf("%.2f", float64(product.Price)/100),
-		Stock:       product.StockQuantity,
-		Data:        product.Data,
+	
 	var reviews []ReviewResponse
 	reviewMessage := ""
 
@@ -225,7 +219,7 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := ProductResponse {
+	response := GetProductResponse {
 		Name: updatedProduct.Name,
 		Description: updatedProduct.Description,
 		Price: fmt.Sprintf("%.2f", float64(updatedProduct.Price)/100),
