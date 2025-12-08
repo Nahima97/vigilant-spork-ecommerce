@@ -35,8 +35,7 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 		return ErrInvalidRating
 	}
 
-	// Rate limiting: max 5 reviews per user per minute
-	s.mu.Lock() // This prevents multiple goroutines from modifying the rateLimiter at the same time
+	s.mu.Lock() 
 	now := time.Now()
 	timestamps := s.rateLimiter[review.UserID]
 	var recent []time.Time
@@ -45,7 +44,7 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 			recent = append(recent, t)
 		}
 	}
-	// If the User already submitted 5 reviews in the last min then reject their request
+	
 	if len(recent) >= 5 {
 		s.mu.Unlock()
 		return ErrRateLimitExceeded
@@ -54,7 +53,7 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 	s.rateLimiter[review.UserID] = recent
 	s.mu.Unlock()
 
-	// Check if user already reviewed this product
+	
 	existing, _ := s.ReviewRepo.GetReviewByUserForProduct(review.UserID, review.ProductID)
 	if existing != nil {
 		existing.Title = review.Title
@@ -69,7 +68,6 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 		}
 	}
 
-	// Update product rating aggregates
 	avg, count, err := s.ReviewRepo.CalculateProductReviewAggregates(review.ProductID)
 	if err != nil {
 		return err
@@ -91,7 +89,6 @@ func (s *ReviewService) UpdateReview(review *models.Review) error {
 		return err
 	}
 
-	// Update aggregates
 	avg, count, err := s.ReviewRepo.CalculateProductReviewAggregates(review.ProductID)
 	if err != nil {
 		return err

@@ -23,21 +23,26 @@ func SetupRouter(
 	r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
 	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductByID).Methods("GET")
+	
 	r.HandleFunc("/api/v1/products", productHandler.GetProducts).Methods("GET")
-	r.HandleFunc("/products/", reviewHandler.GetReviews).Methods("GET")
+	r.HandleFunc("/products/{product_id}/reviews", reviewHandler.GetReviews).Methods("GET")
 
 	// Protected routes
 	secret := os.Getenv("JWT_SECRET")
 	protected := r.PathPrefix("/api/v1").Subrouter()
 	protected.Use(middleware.AuthMiddleware(secret))
 
-	protected.HandleFunc("/products/{product_id}/review", reviewHandler.SubmitReview).Methods("POST")
-	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.UpdateReview).Methods("PUT")
-	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.DeleteReview).Methods("DELETE")
 	protected.HandleFunc("/products", productHandler.AddProduct).Methods("POST")
 	protected.HandleFunc("/products/{id}", productHandler.UpdateProduct).Methods("PATCH")
 	protected.HandleFunc("/products/{id}", productHandler.DeleteProduct).Methods("DELETE")
+	protected.HandleFunc("/checkout", orderHandler.MoveCartToOrder).Methods("POST")
+	protected.HandleFunc("/products/{product_id}/review", reviewHandler.SubmitReview).Methods("POST")
+	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.UpdateReview).Methods("PUT")
+	protected.HandleFunc("/products/{product_id}/review/{review_id}", reviewHandler.DeleteReview).Methods("DELETE")
+	protected.HandleFunc("/cart/{product_id}", cartHandler.AddToCart).Methods("POST")
+	protected.HandleFunc("/checkout", orderHandler.MoveCartToOrder).Methods("POST")
 	protected.HandleFunc("/logout", userHandler.Logout).Methods("POST")
+	protected.HandleFunc("/cart", cartHandler.ViewCart).Methods("GET")
 	protected.HandleFunc("/orders", orderHandler.GetOrderHistory).Methods("GET")
 
 
