@@ -1,8 +1,8 @@
 package models
 
 import (
-	"time"
 	"github.com/gofrs/uuid"
+	"time"
 )
 
 type Product struct {
@@ -10,9 +10,9 @@ type Product struct {
 	Name          string     `json:"name"`
 	Description   string     `gorm:"type:text" json:"description"`
 	Category      string     `json:"category"`
-	Price         float64    `json:"price"`
+	Price         int64      `json:"price"`
 	StockQuantity int        `json:"stockQuantity"`
-	Rating        float64    `json:"rating"`
+	Rating        int        `json:"rating"`
 	ReviewCount   int64      `json:"reviewCount"`
 	Reviews       []Review   `gorm:"foreignKey:ProductID" json:"reviews,omitempty"`
 	Data          string     `json:"data"`

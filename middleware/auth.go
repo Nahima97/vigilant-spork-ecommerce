@@ -37,6 +37,12 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
+			userUUID, err := uuid.FromString(uid)
+			if err != nil {
+				utils.ErrorJSON(w, http.StatusUnauthorized, "invalid user ID in token")
+				return
+			}
+
 			isBlacklisted, err := IsTokenBlacklisted(token)
 			if err != nil {
 				utils.ErrorJSON(w, http.StatusInternalServerError, "error checking token")
@@ -45,12 +51,6 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 
 			if isBlacklisted {
 				utils.ErrorJSON(w, http.StatusUnauthorized, "Unauthorized")
-				return
-			}
-
-			userUUID, err := uuid.FromString(uid)
-			if err != nil {
-				utils.ErrorJSON(w, http.StatusUnauthorized, "invalid user ID in token")
 				return
 			}
 

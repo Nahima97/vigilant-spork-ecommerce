@@ -23,7 +23,8 @@ func main() {
 
 	userService := &services.UserService{UserRepo: userRepo}
 	productService := &services.ProductService{ProductRepo: productRepo}
-	cartService := &services.CartService{CartRepo: cartRepo}
+	cartService := &services.CartService{CartRepo: cartRepo,
+		ProductRepo: productRepo}
 	orderService := &services.OrderService{OrderRepo: orderRepo}
 	reviewService := services.NewReviewService(reviewRepo, productRepo)
 

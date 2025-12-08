@@ -26,12 +26,12 @@ func NewReviewRepository(db *gorm.DB) ReviewRepository {
 }
 
 func (r *ReviewRepo) CreateReview(review *models.Review) error {
-	return r.Db.Create(review).Error
+	return db.Db.Create(review).Error
 }
 
 func (r *ReviewRepo) GetReviewsByProductID(productID uuid.UUID) ([]models.Review, error) {
 	var reviews []models.Review
-	if err := r.Db.Preload("User").Where("product_id = ?", productID).Find(&reviews).Error; err != nil {
+	if err := db.Db.Preload("User").Where("product_id = ?", productID).Find(&reviews).Error; err != nil {
 		return nil, err
 	}
 	return reviews, nil

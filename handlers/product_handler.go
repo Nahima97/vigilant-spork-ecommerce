@@ -2,14 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
 	"vigilant-spork/middleware"
 	"vigilant-spork/models"
 	"vigilant-spork/services"
+
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
 )
 
 type ProductHandler struct {
@@ -19,16 +21,17 @@ type ProductHandler struct {
 type GetProductResponse struct {
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
-	Price       float64 `json:"price"`
+	Price       string `json:"price"`
 	Stock       int     `json:"stock"`
 	Data        string  `json:"data"`
 	Rating      int     `json:"rating"`
+	Reviews     []models.Review `json:"reviews"`
 }
 
 type GetProductByIDResponse struct {
 	Name          string           `json:"name"`
 	Description   string           `json:"description"`
-	Price         float64          `json:"price"`
+	Price         string           `json:"price"`
 	Stock         int              `json:"stock"`
 	Data          string           `json:"data"`
 	Rating        int              `json:"rating"`
@@ -75,6 +78,12 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	response := ProductResponse{
+		Name:        product.Name,
+		Description: product.Description,
+		Price:       fmt.Sprintf("%.2f", float64(product.Price)/100),
+		Stock:       product.StockQuantity,
+		Data:        product.Data,
 	var reviews []ReviewResponse
 	reviewMessage := ""
 
@@ -96,7 +105,7 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 	response := GetProductByIDResponse{
 		Name:          product.Name,
 		Description:   product.Description,
-		Price:         product.Price,
+		Price:         fmt.Sprintf("%.2f", float64(product.Price)/100),
 		Stock:         product.StockQuantity,
 		Data:          product.Data,
 		Rating:        int(product.Rating),
@@ -164,7 +173,7 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 		refinedData = append(refinedData, GetProductResponse{
 			Name:        p.Name,
 			Description: p.Description,
-			Price:       p.Price,
+			Price:       fmt.Sprintf("%.2f", float64(p.Price)/100),
 			Stock:       p.StockQuantity,
 			Data:        p.Data,
 			Rating:      int(p.Rating),
@@ -216,9 +225,17 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response := ProductResponse {
+		Name: updatedProduct.Name,
+		Description: updatedProduct.Description,
+		Price: fmt.Sprintf("%.2f", float64(updatedProduct.Price)/100),
+		Stock: updatedProduct.StockQuantity,
+		Data: updatedProduct.Data,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedProduct)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
