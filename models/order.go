@@ -24,3 +24,10 @@ type OrderItem struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type OrderResponse struct {
+		ID        uuid.UUID `json:"id"`
+		Total     int64		`json:"total"`
+		Status    string    `json:"status"`
+		CreatedAt string    `json:"created_at"`
+	}
