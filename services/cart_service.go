@@ -1,10 +1,14 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"vigilant-spork/models"
 	"vigilant-spork/repository"
+
 	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 type CartService struct {
@@ -57,4 +61,48 @@ func (s *CartService) AddToCart(userID, productID uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+func (s *CartService) ViewCart(userID uuid.UUID) (*models.Cart, error) {
+	cart, err := s.CartRepo.GetCartByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var total int64
+	for i := range cart.Items {
+		item := &cart.Items[i]
+		item.UnitPrice = item.Product.Price
+		total += int64(item.Quantity) * item.UnitPrice
+	}
+	cart.Total = total
+
+	return cart, nil
+}
+
+func (s *CartService) RemoveItem(userID, productID uuid.UUID) error {
+	cart, err := s.CartRepo.GetOrCreateCart(userID)
+	if err != nil {
+		return err
+	}
+
+	err = s.CartRepo.RemoveItemFromCart(cart.ID, productID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return gorm.ErrRecordNotFound
+	}
+	if err != nil {
+		return err
+	}
+
+	items, err := s.CartRepo.GetCartItems(cart.ID)
+	if err != nil {
+		return err
+	}
+
+	total := int64(0)
+	for _, item := range items {
+		total += int64(item.Quantity) * item.UnitPrice
+	}
+
+	return s.CartRepo.UpdateCartTotal(total, cart.ID)
 }

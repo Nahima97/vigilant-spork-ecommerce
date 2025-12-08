@@ -19,12 +19,12 @@ type ProductHandler struct {
 }
 
 type GetProductResponse struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       string `json:"price"`
-	Stock       int     `json:"stock"`
-	Data        string  `json:"data"`
-	Rating      int     `json:"rating"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Price       string          `json:"price"`
+	Stock       int             `json:"stock"`
+	Data        string          `json:"data"`
+	Rating      int             `json:"rating"`
 	Reviews     []models.Review `json:"reviews"`
 }
 
@@ -77,6 +77,7 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
+	
 	
 	var reviews []ReviewResponse
 	reviewMessage := ""
@@ -219,12 +220,12 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := GetProductResponse {
-		Name: updatedProduct.Name,
+	response := GetProductResponse{
+		Name:        updatedProduct.Name,
 		Description: updatedProduct.Description,
-		Price: fmt.Sprintf("%.2f", float64(updatedProduct.Price)/100),
-		Stock: updatedProduct.StockQuantity,
-		Data: updatedProduct.Data,
+		Price:       fmt.Sprintf("%.2f", float64(updatedProduct.Price)/100),
+		Stock:       updatedProduct.StockQuantity,
+		Data:        updatedProduct.Data,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

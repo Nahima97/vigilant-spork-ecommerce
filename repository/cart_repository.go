@@ -14,6 +14,9 @@ type CartRepository interface {
 	AddItemToCart(productID, cartID uuid.UUID) error
 	GetCartItems(cartID uuid.UUID) ([]models.CartItem, error)
 	UpdateCartTotal(total int64, cartID uuid.UUID) error
+	GetCartByUserID(userID uuid.UUID) (*models.Cart, error)
+	GetCartItemsByCartID(cartID uuid.UUID) ([]models.CartItem, error)
+	RemoveItemFromCart(cartID, productID uuid.UUID) error
 }
 
 type CartRepo struct {
@@ -25,8 +28,8 @@ func (r *CartRepo) GetOrCreateCart(userID uuid.UUID) (*models.Cart, error) {
 	err := db.Db.Preload("User").Preload("Items").Where("user_id = ?", userID).First(&cart).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		cart = models.Cart{
-			UserID:     userID,
-			Total: 0,
+			UserID: userID,
+			Total:  0,
 		}
 		err = db.Db.Create(&cart).Error
 		if err != nil {
@@ -35,7 +38,7 @@ func (r *CartRepo) GetOrCreateCart(userID uuid.UUID) (*models.Cart, error) {
 
 		err = db.Db.Preload("User").Preload("Items").First(&cart, cart.ID).Error
 		if err != nil {
-			return nil, err 
+			return nil, err
 		}
 
 		return &cart, nil
@@ -108,4 +111,36 @@ func (r *CartRepo) UpdateCartTotal(total int64, cartID uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+func (r *CartRepo) GetCartByUserID(userID uuid.UUID) (*models.Cart, error) {
+	var cart models.Cart
+	err := db.Db.Preload("Items.Product").Preload("User").Where("user_id = ?", userID).First(&cart).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, gorm.ErrRecordNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &cart, nil
+}
+
+func (r *CartRepo) GetCartItemsByCartID(cartID uuid.UUID) ([]models.CartItem, error) {
+	var items []models.CartItem
+	err := db.Db.Preload("Product").Where("cart_id = ?", cartID).Find(&items).Error
+	return items, err
+}
+
+func (r *CartRepo) RemoveItemFromCart(cartID, productID uuid.UUID) error {
+	var item models.CartItem
+	err := db.Db.Where("cart_id = ? AND product_id = ?", cartID, productID).First(&item).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return gorm.ErrRecordNotFound
+	}
+	if err != nil {
+		return err
+	}
+
+	return db.Db.Delete(&item).Error
 }
