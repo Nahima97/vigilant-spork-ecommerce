@@ -22,8 +22,8 @@ func SetupRouter(
 	// Public Routes
 	r.HandleFunc("/api/v1/login", userHandler.Login).Methods("POST")
 	r.HandleFunc("/api/v1/register", userHandler.Register).Methods("POST")
-	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductSummary).Methods("GET")
-	r.HandleFunc("/api/v1/products/{id}/details", productHandler.GetProductDetails).Methods("GET")
+	r.HandleFunc("/api/v1/products/{id}", productHandler.GetProductByID).Methods("GET")
+	
 	r.HandleFunc("/api/v1/products", productHandler.GetProducts).Methods("GET")
 	r.HandleFunc("/products/{product_id}/reviews", reviewHandler.GetReviews).Methods("GET")
 

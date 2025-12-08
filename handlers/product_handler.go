@@ -64,11 +64,11 @@ func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(products)
 }
 
-func (h *ProductHandler) GetProductSummary(w http.ResponseWriter, r *http.Request) {
+func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
 	productID := mux.Vars(r)["id"]
 	productUUID, err := uuid.FromString(productID)
 	if err != nil {
-		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		http.Error(w, "Invalid product ID", http.StatusNotFound)
 		return
 	}
 
@@ -77,36 +77,7 @@ func (h *ProductHandler) GetProductSummary(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
-
-	response := GetProductResponse{
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       fmt.Sprintf("%.2f", float64(product.Price)/100),
-		Stock:       product.StockQuantity,
-		Data:        product.Data,
-		Rating:      int(product.Rating),
-		Reviews:     product.Reviews,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
-}
-
-func (h *ProductHandler) GetProductDetails(w http.ResponseWriter, r *http.Request) {
-	productID := mux.Vars(r)["id"]
-	productUUID, err := uuid.FromString(productID)
-	if err != nil {
-		http.Error(w, "Invalid product ID", http.StatusBadRequest)
-		return
-	}
-
-	product, err := h.Service.GetProductByID(productUUID)
-	if err != nil {
-		http.Error(w, "Product not found", http.StatusNotFound)
-		return
-	}
-
+	
 	var reviews []ReviewResponse
 	reviewMessage := ""
 
@@ -114,6 +85,7 @@ func (h *ProductHandler) GetProductDetails(w http.ResponseWriter, r *http.Reques
 		reviews = []ReviewResponse{}
 		reviewMessage = "No user reviews"
 	} else {
+
 		for _, r := range product.Reviews {
 			reviews = append(reviews, ReviewResponse{
 				Title:       r.Title,
