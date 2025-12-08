@@ -19,12 +19,12 @@ type ProductHandler struct {
 }
 
 type GetProductResponse struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       string `json:"price"`
-	Stock       int     `json:"stock"`
-	Data        string  `json:"data"`
-	Rating      int     `json:"rating"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Price       string          `json:"price"`
+	Stock       int             `json:"stock"`
+	Data        string          `json:"data"`
+	Rating      int             `json:"rating"`
 	Reviews     []models.Review `json:"reviews"`
 }
 
@@ -64,11 +64,11 @@ func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(products)
 }
 
-func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
+func (h *ProductHandler) GetProductSummary(w http.ResponseWriter, r *http.Request) {
 	productID := mux.Vars(r)["id"]
 	productUUID, err := uuid.FromString(productID)
 	if err != nil {
-		http.Error(w, "Invalid product ID", http.StatusNotFound)
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
 		return
 	}
 
@@ -78,12 +78,35 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	response := ProductResponse{
+	response := GetProductResponse{
 		Name:        product.Name,
 		Description: product.Description,
 		Price:       fmt.Sprintf("%.2f", float64(product.Price)/100),
 		Stock:       product.StockQuantity,
 		Data:        product.Data,
+		Rating:      int(product.Rating),
+		Reviews:     product.Reviews,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *ProductHandler) GetProductDetails(w http.ResponseWriter, r *http.Request) {
+	productID := mux.Vars(r)["id"]
+	productUUID, err := uuid.FromString(productID)
+	if err != nil {
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		return
+	}
+
+	product, err := h.Service.GetProductByID(productUUID)
+	if err != nil {
+		http.Error(w, "Product not found", http.StatusNotFound)
+		return
+	}
+
 	var reviews []ReviewResponse
 	reviewMessage := ""
 
@@ -91,7 +114,6 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 		reviews = []ReviewResponse{}
 		reviewMessage = "No user reviews"
 	} else {
-
 		for _, r := range product.Reviews {
 			reviews = append(reviews, ReviewResponse{
 				Title:       r.Title,
@@ -225,12 +247,12 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := ProductResponse {
-		Name: updatedProduct.Name,
+	response := GetProductResponse{
+		Name:        updatedProduct.Name,
 		Description: updatedProduct.Description,
-		Price: fmt.Sprintf("%.2f", float64(updatedProduct.Price)/100),
-		Stock: updatedProduct.StockQuantity,
-		Data: updatedProduct.Data,
+		Price:       fmt.Sprintf("%.2f", float64(updatedProduct.Price)/100),
+		Stock:       updatedProduct.StockQuantity,
+		Data:        updatedProduct.Data,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
