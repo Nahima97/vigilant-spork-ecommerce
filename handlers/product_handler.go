@@ -78,6 +78,7 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	
+	
 	var reviews []ReviewResponse
 	reviewMessage := ""
 

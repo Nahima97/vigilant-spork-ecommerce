@@ -16,6 +16,7 @@ type CartRepository interface {
 	UpdateCartTotal(total int64, cartID uuid.UUID) error
 	GetCartByUserID(userID uuid.UUID) (*models.Cart, error)
 	GetCartItemsByCartID(cartID uuid.UUID) ([]models.CartItem, error)
+	RemoveItemFromCart(cartID, productID uuid.UUID) error
 }
 
 type CartRepo struct {
@@ -128,4 +129,18 @@ func (r *CartRepo) GetCartItemsByCartID(cartID uuid.UUID) ([]models.CartItem, er
 	var items []models.CartItem
 	err := db.Db.Preload("Product").Where("cart_id = ?", cartID).Find(&items).Error
 	return items, err
+}
+
+func (r *CartRepo) RemoveItemFromCart(cartID, productID uuid.UUID) error {
+	var item models.CartItem
+	err := db.Db.Where("cart_id = ? AND product_id = ?", cartID, productID).First(&item).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return gorm.ErrRecordNotFound
+	}
+	if err != nil {
+		return err
+	}
+
+	return db.Db.Delete(&item).Error
 }

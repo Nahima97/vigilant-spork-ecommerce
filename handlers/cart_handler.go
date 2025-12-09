@@ -106,3 +106,30 @@ func (h *CartHandler) ViewCart(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resp)
 }
+
+func (h *CartHandler) RemoveItem(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == uuid.Nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	productID := mux.Vars(r)["product_id"]
+	productUUID, err := uuid.FromString(productID)
+	if err != nil {
+		http.Error(w, "invalid product id", http.StatusBadRequest)
+		return
+	}
+
+	err = h.Service.RemoveItem(userID, productUUID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		http.Error(w, "item not found in cart", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent) 
+}
