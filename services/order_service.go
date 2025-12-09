@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/gofrs/uuid"
+	"vigilant-spork/models"
 	"vigilant-spork/repository"
 )
+
 
 type OrderService struct {
 	OrderRepo repository.OrderRepository
@@ -91,3 +93,9 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID uuid.UUID) error
 		return txRepo.UpdateOrder(ctx, order)
 	})
 }
+
+
+func (s *OrderService) GetOrderHistory(userID uuid.UUID) ([]models.Order, error) {
+	return s.OrderRepo.GetOrderHistory(userID)
+}
+

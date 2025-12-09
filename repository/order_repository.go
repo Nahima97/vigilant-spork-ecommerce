@@ -3,10 +3,11 @@ package repository
 import (
 	"context"
 	"errors"
+	"vigilant-spork/db"
+	"vigilant-spork/models"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"vigilant-spork/models"
 )
 
 type OrderRepository interface {
@@ -20,6 +21,7 @@ type OrderRepository interface {
 	ClearCart(ctx context.Context, cartID uuid.UUID) error
 	GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]models.OrderItem, error)
 	UpdateOrderTotal(ctx context.Context, total int64, orderID uuid.UUID) error
+		GetOrderHistory(userID uuid.UUID) ([]models.Order, error)
 }
 
 type OrderRepo struct {
@@ -186,4 +188,16 @@ func (r *OrderRepo) UpdateOrderTotal(ctx context.Context, total int64, orderID u
 		return err
 	}
 	return nil
+}
+
+
+func (r *OrderRepo) GetOrderHistory(userID uuid.UUID) ([]models.Order, error) {
+	var orders []models.Order
+
+	 err := db.Db.Where("user_id = ?", userID).Order("created_at DESC").Find(&orders).Error
+	 if err != nil {
+		return nil, err
+	}
+	
+	return orders, nil
 }
