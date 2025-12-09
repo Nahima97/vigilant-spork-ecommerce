@@ -76,3 +76,11 @@ func (s *CartService) ViewCart(userID uuid.UUID) (*models.Cart, error) {
 
 	return cart, nil
 }
+
+func (s *CartService) UpdateItemQuantity(userID, productID uuid.UUID, quantity int) (*models.CartItem, error) {
+	cartItem, err := s.CartRepo.UpdateItemQuantity(userID, productID, quantity)
+	if err != nil {
+		return nil, err 
+	}
+	return cartItem, nil 
+}

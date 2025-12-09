@@ -16,11 +16,14 @@ type CartRepository interface {
 	UpdateCartTotal(total int64, cartID uuid.UUID) error
 	GetCartByUserID(userID uuid.UUID) (*models.Cart, error)
 	GetCartItemsByCartID(cartID uuid.UUID) ([]models.CartItem, error)
+	UpdateItemQuantity(userID, productID uuid.UUID, quantity int) (*models.CartItem, error)
 }
 
 type CartRepo struct {
 	Db *gorm.DB
 }
+
+var ErrInvalidQuantity = errors.New("invalid quantity")
 
 func (r *CartRepo) GetOrCreateCart(userID uuid.UUID) (*models.Cart, error) {
 	var cart models.Cart
@@ -128,4 +131,31 @@ func (r *CartRepo) GetCartItemsByCartID(cartID uuid.UUID) ([]models.CartItem, er
 	var items []models.CartItem
 	err := db.Db.Preload("Product").Where("cart_id = ?", cartID).Find(&items).Error
 	return items, err
+}
+
+func (r *CartRepo) UpdateItemQuantity(userID, productID uuid.UUID, quantity int) (*models.CartItem, error) {
+	var cartItem models.CartItem
+	err := db.Db.Preload("Product").Joins("JOIN carts ON carts.id = cart_items.cart_id").Where("carts.user_id = ? AND cart_items.product_id =?", userID, productID).First(&cartItem).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, gorm.ErrRecordNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if quantity == 0 {
+		return nil, ErrInvalidQuantity
+	}
+
+	if cartItem.Product.StockQuantity < quantity {
+		return nil, ErrInsufficientStock
+	}
+
+	cartItem.Quantity = quantity
+
+	err = db.Db.Save(&cartItem).Error
+	if err != nil {
+		return nil, err
+	}
+	return &cartItem, nil
 }

@@ -3,10 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"vigilant-spork/middleware"
 	"vigilant-spork/repository"
 	"vigilant-spork/services"
+
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -18,8 +20,9 @@ type CartHandler struct {
 
 type CartItemResponse struct {
 	ProductID uuid.UUID `json:"product_id"`
+	Name      string    `json:"name"`
 	Quantity  int       `json:"quantity"`
-	UnitPrice int64     `json:"unit_price"`
+	UnitPrice string    `json:"unit_price"`
 }
 
 type ViewCartResponse struct {
@@ -105,4 +108,63 @@ func (h *CartHandler) ViewCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *CartHandler) UpdateItemQuantity(w http.ResponseWriter, r *http.Request) {
+	type UpdateQuantity struct {
+		Quantity int `json:"quantity"`
+	}
+
+	var updatedQuantity UpdateQuantity
+	err := json.NewDecoder(r.Body).Decode(&updatedQuantity)
+	if err != nil {
+		http.Error(w, "invalid input", http.StatusBadRequest)
+		return
+	}
+
+	quantity := updatedQuantity.Quantity
+
+	productID := mux.Vars(r)["product_id"]
+	productUUID, err := uuid.FromString(productID)
+	if err != nil {
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		return
+	}
+
+	userID := middleware.GetUserID(r.Context())
+	if userID == uuid.Nil {
+		http.Error(w, "no userID found", http.StatusInternalServerError)
+		return
+	}
+
+	cartItem, err := h.Service.UpdateItemQuantity(userID, productUUID, quantity)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			http.Error(w, "item not found", http.StatusNotFound)
+		case errors.Is(err, repository.ErrInsufficientStock):
+			http.Error(w, "insufficient stock", http.StatusBadRequest)
+		case errors.Is(err, repository.ErrInvalidQuantity):
+			http.Error(w, "invalid quantity", http.StatusBadRequest)
+		default:
+			http.Error(w, "unable to update item quantity", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// if cartItem == nil {
+	// 	http.Error(w, "unable to update item quantity", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	response := CartItemResponse{
+		ProductID: cartItem.ProductID,
+		Name:      cartItem.Product.Name,
+		Quantity:  cartItem.Quantity,
+		UnitPrice: fmt.Sprintf("%.2f", float64(cartItem.UnitPrice)/100),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
