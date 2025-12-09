@@ -3,15 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
 	"math"
 	"net/http"
 	"strconv"
 	"vigilant-spork/middleware"
 	"vigilant-spork/models"
 	"vigilant-spork/services"
-
-	"github.com/gofrs/uuid"
-	"github.com/gorilla/mux"
 )
 
 type ProductHandler struct {
@@ -77,8 +76,7 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
-	
-	
+
 	var reviews []ReviewResponse
 	reviewMessage := ""
 
@@ -132,6 +130,11 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	maxPrice, err := strconv.Atoi(r.URL.Query().Get("max_price"))
 	if err != nil || maxPrice < 1 {
 		maxPrice = math.MaxInt
+	}
+
+	if maxPrice < minPrice {
+		http.Error(w, "max price cannot be less than min price", http.StatusBadRequest)
+		return
 	}
 
 	category := r.URL.Query().Get("category")
@@ -234,7 +237,6 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
-
 	role := middleware.GetUserRole(r.Context())
 	if role != "admin" {
 		http.Error(w, "Forbidden", http.StatusForbidden)
@@ -254,5 +256,5 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("product deleted successfully!")
+	w.Write([]byte("product deleted successfully"))
 }

@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"errors"
-	"vigilant-spork/db"
-	"vigilant-spork/models"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"vigilant-spork/db"
+	"vigilant-spork/models"
 )
 
 type OrderRepository interface {
@@ -21,7 +21,7 @@ type OrderRepository interface {
 	ClearCart(ctx context.Context, cartID uuid.UUID) error
 	GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]models.OrderItem, error)
 	UpdateOrderTotal(ctx context.Context, total int64, orderID uuid.UUID) error
-		GetOrderHistory(userID uuid.UUID) ([]models.Order, error)
+	GetOrderHistory(userID uuid.UUID) ([]models.Order, error)
 }
 
 type OrderRepo struct {
@@ -30,14 +30,12 @@ type OrderRepo struct {
 
 var ErrInsufficientStock = errors.New("insufficient stock")
 
-// withTX creates a new repository instance with the given transaction
 func (r *OrderRepo) withTX(tx *gorm.DB) *OrderRepo {
 	return &OrderRepo{
 		Db: tx,
 	}
 }
 
-// Transaction manages the transaction lifecycle
 func (r *OrderRepo) Transaction(ctx context.Context, fn func(repo OrderRepository) error) error {
 	tx := r.Db.Begin()
 	if tx.Error != nil {
@@ -59,7 +57,7 @@ func (r *OrderRepo) GetCart(ctx context.Context, userID uuid.UUID) (*models.Cart
 	var cart models.Cart
 	err := db.Preload("Items").Where("user_id = ?", userID).First(&cart).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+		return nil, gorm.ErrRecordNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -74,6 +72,7 @@ func (r *OrderRepo) VerifyAndDeductStock(ctx context.Context, cartItem *models.C
 	if err != nil {
 		return err
 	}
+
 	if cartItem.Quantity > product.StockQuantity {
 		return ErrInsufficientStock
 	}
@@ -104,7 +103,7 @@ func (r *OrderRepo) CreateOrder(ctx context.Context, userID uuid.UUID) (*models.
 func (r *OrderRepo) GetOrder(ctx context.Context, userID uuid.UUID) (*models.Order, error) {
 	db := r.Db.WithContext(ctx)
 	var order models.Order
-	err := db.Where("user_id = ?", userID).Create(&order).Error
+	err := db.Where("user_id = ?", userID).First(&order).Error
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +122,7 @@ func (r *OrderRepo) UpdateOrder(ctx context.Context, order *models.Order) error 
 func (r *OrderRepo) MoveCartItemsToOrder(ctx context.Context, orderID uuid.UUID, cartID uuid.UUID) error {
 	db := r.Db.WithContext(ctx)
 	var cartItems []models.CartItem
-	err := db.Where("cart_id = ?", cartID).Find(&cartItems).Error
+	err := db.Where("cart_id = ?", cartID).First(&cartItems).Error
 	if err != nil {
 		return err
 	}
@@ -154,10 +153,10 @@ func (r *OrderRepo) MoveCartItemsToOrder(ctx context.Context, orderID uuid.UUID,
 		return err
 	}
 
-	err = db.Save(&order).Error
-	if err != nil {
-		return err
-	}
+	// err = db.Save(&order).Error
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -190,14 +189,12 @@ func (r *OrderRepo) UpdateOrderTotal(ctx context.Context, total int64, orderID u
 	return nil
 }
 
-
 func (r *OrderRepo) GetOrderHistory(userID uuid.UUID) ([]models.Order, error) {
 	var orders []models.Order
-
-	 err := db.Db.Where("user_id = ?", userID).Order("created_at DESC").Find(&orders).Error
-	 if err != nil {
+	err := db.Db.Where("user_id = ?", userID).Order("created_at DESC").Find(&orders).Error
+	if err != nil {
 		return nil, err
 	}
-	
+
 	return orders, nil
 }

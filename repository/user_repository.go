@@ -26,11 +26,19 @@ func (r *UserRepo) GetUserByEmail(email string) (*models.User, error) {
 }
 
 func (r *UserRepo) CreateUser(user *models.User) error {
-	return db.Db.Create(user).Error
+	err := db.Db.Create(user).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *UserRepo) AddTokenToBlacklist(token string) error {
 	var entry models.BlacklistedToken
 	entry.Token = token
-	return db.Db.Create(&entry).Error
+	err := db.Db.Create(&entry).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

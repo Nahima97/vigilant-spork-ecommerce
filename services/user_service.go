@@ -15,45 +15,42 @@ type UserService struct {
 	UserRepo repository.UserRepository
 }
 
-// error for duplicate email
 var ErrEmailExists = errors.New("email already registered")
 
+func isValidEmail(email string) bool {
+	regex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	return regex.MatchString(email)
+}
+
 func (s *UserService) RegisterUser(user *models.User) error {
-	// Validate email
 	if !isValidEmail(user.Email) {
 		return errors.New("invalid email format")
 	}
 
-	// Validate password
 	if len(user.Password) < 8 {
 		return errors.New("password must be at least 8 characters")
 	}
 
-	// Check if email exists
 	existing, err := s.UserRepo.GetUserByEmail(user.Email)
 	if err == nil && existing != nil {
 		return ErrEmailExists
 	}
 
-	// Hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	user.Password = string(hashed)
 
-	// Default role
 	if user.Role == "" {
 		user.Role = "customer"
 	}
 
-	// Save user
-	return s.UserRepo.CreateUser(user)
-}
-
-func isValidEmail(email string) bool {
-	regex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-	return regex.MatchString(email)
+	err = s.UserRepo.CreateUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *UserService) Login(login *models.User) (string, error) {
@@ -74,8 +71,12 @@ func (s *UserService) Login(login *models.User) (string, error) {
 		return "", err
 	}
 	return token, nil
-
 }
+
 func (s *UserService) AddTokenToBlacklist(token string) error {
-	return s.UserRepo.AddTokenToBlacklist(token)
+	err := s.UserRepo.AddTokenToBlacklist(token)
+	if err != nil {
+		return err
+	}
+	return nil
 }

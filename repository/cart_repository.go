@@ -2,11 +2,10 @@ package repository
 
 import (
 	"errors"
-	"vigilant-spork/db"
-	"vigilant-spork/models"
-
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
+	"vigilant-spork/db"
+	"vigilant-spork/models"
 )
 
 type CartRepository interface {
@@ -38,13 +37,6 @@ func (r *CartRepo) GetOrCreateCart(userID uuid.UUID) (*models.Cart, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		err = db.Db.Preload("User").Preload("Items").First(&cart, cart.ID).Error
-		if err != nil {
-			return nil, err
-		}
-
-		return &cart, nil
 	}
 	if err != nil {
 		return nil, err
@@ -69,9 +61,6 @@ func (r *CartRepo) AddItemToCart(productID, cartID uuid.UUID) error {
 	var cartItem models.CartItem
 	err = db.Db.Where("cart_id = ? AND product_id = ?", cart.ID, productID).First(&cartItem).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		if product.StockQuantity < 1 {
-			return ErrInsufficientStock
-		}
 		cartItem = models.CartItem{
 			CartID:    cart.ID,
 			ProductID: productID,
@@ -131,7 +120,10 @@ func (r *CartRepo) GetCartByUserID(userID uuid.UUID) (*models.Cart, error) {
 func (r *CartRepo) GetCartItemsByCartID(cartID uuid.UUID) ([]models.CartItem, error) {
 	var items []models.CartItem
 	err := db.Db.Preload("Product").Where("cart_id = ?", cartID).Find(&items).Error
-	return items, err
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 func (r *CartRepo) UpdateItemQuantity(userID, productID uuid.UUID, quantity int) (*models.CartItem, error) {
@@ -159,6 +151,8 @@ func (r *CartRepo) UpdateItemQuantity(userID, productID uuid.UUID, quantity int)
 		return nil, err
 	}
 	return &cartItem, nil
+}
+
 func (r *CartRepo) RemoveItemFromCart(cartID, productID uuid.UUID) error {
 	var item models.CartItem
 	err := db.Db.Where("cart_id = ? AND product_id = ?", cartID, productID).First(&item).Error
@@ -170,5 +164,9 @@ func (r *CartRepo) RemoveItemFromCart(cartID, productID uuid.UUID) error {
 		return err
 	}
 
-	return db.Db.Delete(&item).Error
+	err = db.Db.Delete(&item).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
