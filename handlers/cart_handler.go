@@ -152,11 +152,6 @@ func (h *CartHandler) UpdateItemQuantity(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// if cartItem == nil {
-	// 	http.Error(w, "unable to update item quantity", http.StatusInternalServerError)
-	// 	return
-	// }
-
 	response := CartItemResponse{
 		ProductID: cartItem.ProductID,
 		Name:      cartItem.Product.Name,
