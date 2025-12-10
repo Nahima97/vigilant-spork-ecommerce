@@ -8,7 +8,6 @@ import (
 	"vigilant-spork/repository"
 )
 
-
 type OrderService struct {
 	OrderRepo repository.OrderRepository
 }
@@ -60,10 +59,35 @@ func (s *OrderService) MoveCartToOrder(ctx context.Context, userID uuid.UUID) er
 		if err != nil {
 			return err
 		}
-		return nil
 
+		order, err = txRepo.GetOrder(ctx, userID)
+		if err != nil {
+			return err
+		}
+
+		order.Status = "ORDER PLACED"
+
+		err = txRepo.UpdateOrder(ctx, order)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 	return err
+}
+
+func (s *OrderService) OrderPlaced(ctx context.Context, orderID uuid.UUID) error {
+	return s.OrderRepo.Transaction(ctx, func(txRepo repository.OrderRepository) error {
+		order, err := txRepo.GetOrder(ctx, orderID)
+		if err != nil {
+			return err
+		}
+		if order.Status != "PENDING" {
+			return fmt.Errorf("cannot ship order in status %s", order.Status)
+		}
+		order.Status = "ORDER PLACED"
+		return txRepo.UpdateOrder(ctx, order)
+	})
 }
 
 func (s *OrderService) ShipOrder(ctx context.Context, orderID uuid.UUID) error {
@@ -94,8 +118,10 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID uuid.UUID) error
 	})
 }
 
-
 func (s *OrderService) GetOrderHistory(userID uuid.UUID) ([]models.Order, error) {
-	return s.OrderRepo.GetOrderHistory(userID)
+	order, err := s.OrderRepo.GetOrderHistory(userID)
+	if err != nil {
+		return nil, err
+	}
+	return order, nil
 }
-

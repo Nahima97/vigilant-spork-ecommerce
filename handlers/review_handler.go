@@ -34,6 +34,7 @@ func (h *ReviewHandler) SubmitReview(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid product ID", http.StatusBadRequest)
 		return
 	}
+
 	review.ProductID = productID
 
 	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
@@ -52,66 +53,7 @@ func (h *ReviewHandler) SubmitReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(review)
-}
-
-func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
-	var update models.Review
-	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	vars := mux.Vars(r)
-	productID, err := uuid.FromString(vars["product_id"])
-	if err != nil {
-		http.Error(w, "invalid product ID", http.StatusBadRequest)
-		return
-	}
-
-	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
-
-	// Fetch existing review
-	existing, err := h.Service.GetReviewByUserForProduct(userID, productID)
-	if err != nil {
-		http.Error(w, "review not found", http.StatusNotFound)
-		return
-	}
-
-	existing.Title = update.Title
-	existing.Description = update.Description
-	existing.Rating = update.Rating
-
-	if err := h.Service.UpdateReview(existing); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(existing)
-}
-
-func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	productID, err := uuid.FromString(vars["product_id"])
-	if err != nil {
-		http.Error(w, "invalid product ID", http.StatusBadRequest)
-		return
-	}
-
-	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
-
-	existing, err := h.Service.GetReviewByUserForProduct(userID, productID)
-	if err != nil {
-		http.Error(w, "review not found", http.StatusNotFound)
-		return
-	}
-
-	if err := h.Service.DeleteReview(existing.ID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
+	w.Write([]byte("review created successfully"))
 }
 
 func (h *ReviewHandler) GetReviews(w http.ResponseWriter, r *http.Request) {
@@ -145,4 +87,69 @@ func (h *ReviewHandler) GetReviews(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(reviewResponses)
+}
+
+func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
+	var update models.Review
+	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	vars := mux.Vars(r)
+	productID, err := uuid.FromString(vars["product_id"])
+	if err != nil {
+		http.Error(w, "invalid product ID", http.StatusBadRequest)
+		return
+	}
+
+	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
+
+	existing, err := h.Service.GetReviewByUserForProduct(userID, productID)
+	if err != nil {
+		http.Error(w, "review not found", http.StatusNotFound)
+		return
+	}
+
+	existing.Title = update.Title
+	existing.Description = update.Description
+	existing.Rating = update.Rating
+
+	if err := h.Service.UpdateReview(existing); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := ReviewResponse{
+		Title:       existing.Title,
+		Description: existing.Description,
+		Rating:      existing.Rating,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	productID, err := uuid.FromString(vars["product_id"])
+	if err != nil {
+		http.Error(w, "invalid product ID", http.StatusBadRequest)
+		return
+	}
+
+	userID := r.Context().Value(middleware.UserIDKey).(uuid.UUID)
+
+	existing, err := h.Service.GetReviewByUserForProduct(userID, productID)
+	if err != nil {
+		http.Error(w, "review not found", http.StatusNotFound)
+		return
+	}
+
+	if err := h.Service.DeleteReview(existing.ID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

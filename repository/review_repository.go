@@ -26,12 +26,17 @@ func NewReviewRepository(db *gorm.DB) ReviewRepository {
 }
 
 func (r *ReviewRepo) CreateReview(review *models.Review) error {
-	return db.Db.Create(review).Error
+	err := db.Db.Create(review).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *ReviewRepo) GetReviewsByProductID(productID uuid.UUID) ([]models.Review, error) {
 	var reviews []models.Review
-	if err := db.Db.Preload("User").Where("product_id = ?", productID).Find(&reviews).Error; err != nil {
+	err := db.Db.Preload("User").Where("product_id = ?", productID).Find(&reviews).Error
+	if err != nil {
 		return nil, err
 	}
 	return reviews, nil
@@ -56,11 +61,19 @@ func (r *ReviewRepo) GetReviewByID(reviewID uuid.UUID) (*models.Review, error) {
 }
 
 func (r *ReviewRepo) UpdateReview(review *models.Review) error {
-	return db.Db.Save(review).Error
+	err := db.Db.Save(review).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *ReviewRepo) DeleteReview(id uuid.UUID) error {
-	return db.Db.Delete(&models.Review{}, id).Error
+	err := db.Db.Delete(&models.Review{}, id).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *ReviewRepo) CalculateProductReviewAggregates(productID uuid.UUID) (float64, int64, error) {

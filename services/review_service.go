@@ -35,7 +35,7 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 		return ErrInvalidRating
 	}
 
-	s.mu.Lock() 
+	s.mu.Lock()
 	now := time.Now()
 	timestamps := s.rateLimiter[review.UserID]
 	var recent []time.Time
@@ -44,7 +44,7 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 			recent = append(recent, t)
 		}
 	}
-	
+
 	if len(recent) >= 5 {
 		s.mu.Unlock()
 		return ErrRateLimitExceeded
@@ -53,7 +53,6 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 	s.rateLimiter[review.UserID] = recent
 	s.mu.Unlock()
 
-	
 	existing, _ := s.ReviewRepo.GetReviewByUserForProduct(review.UserID, review.ProductID)
 	if existing != nil {
 		existing.Title = review.Title
@@ -72,9 +71,29 @@ func (s *ReviewService) SubmitReview(review *models.Review) error {
 	if err != nil {
 		return err
 	}
-	return s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
+	err = s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
+func (s *ReviewService) GetReviewsForProduct(productID uuid.UUID) ([]models.Review, error) {
+	reviews, err := s.ReviewRepo.GetReviewsByProductID(productID)
+	if err != nil {
+		return nil, err
+	}
+	return reviews, nil
+}
+
+func (s *ReviewService) GetReviewByUserForProduct(userID, productID uuid.UUID) (*models.Review, error) {
+	review, err := s.ReviewRepo.GetReviewByUserForProduct(userID, productID)
+	if err != nil {
+		return nil, err
+	}
+	return review, nil
+
+}
 func (s *ReviewService) UpdateReview(review *models.Review) error {
 	existing, err := s.ReviewRepo.GetReviewByUserForProduct(review.UserID, review.ProductID)
 	if err != nil || existing == nil {
@@ -93,7 +112,11 @@ func (s *ReviewService) UpdateReview(review *models.Review) error {
 	if err != nil {
 		return err
 	}
-	return s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
+	err = s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *ReviewService) DeleteReview(reviewID uuid.UUID) error {
@@ -110,13 +133,9 @@ func (s *ReviewService) DeleteReview(reviewID uuid.UUID) error {
 	if err != nil {
 		return err
 	}
-	return s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
-}
-
-func (s *ReviewService) GetReviewsForProduct(productID uuid.UUID) ([]models.Review, error) {
-	return s.ReviewRepo.GetReviewsByProductID(productID)
-}
-
-func (s *ReviewService) GetReviewByUserForProduct(userID, productID uuid.UUID) (*models.Review, error) {
-	return s.ReviewRepo.GetReviewByUserForProduct(userID, productID)
+	err = s.ProductRepo.UpdateAggregates(review.ProductID, avg, count)
+	if err != nil {
+		return err
+	}
+	return nil
 }

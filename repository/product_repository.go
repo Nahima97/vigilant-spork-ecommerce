@@ -90,17 +90,21 @@ func (r *ProductRepo) UpdateProduct(product *models.Product) (*models.Product, e
 
 func (r *ProductRepo) DeleteProduct(id uuid.UUID) error {
 	var product models.Product
-
 	err := db.Db.Where("id = ?", id).Delete(&product).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
+
 func (r *ProductRepo) UpdateAggregates(productID uuid.UUID, avgRating float64, reviewCount int64) error {
-	return r.Db.Model(&models.Product{}).Where("id = ?", productID).
+	err := r.Db.Model(&models.Product{}).Where("id = ?", productID).
 		Updates(map[string]interface{}{
 			"rating":       avgRating,
 			"review_count": reviewCount,
 		}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

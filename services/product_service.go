@@ -3,12 +3,11 @@ package services
 import (
 	"errors"
 	"fmt"
+	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 	"math"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
-
-	"github.com/gofrs/uuid"
-	"gorm.io/gorm"
 )
 
 type ProductService struct {
@@ -101,6 +100,7 @@ func (s *ProductService) UpdateProduct(productID uuid.UUID, req *models.Product)
 		product.Price = req.Price
 	}
 	product.Price = int64(math.Round(float64(product.Price) * 100))
+
 	if req.StockQuantity != 0 {
 		product.StockQuantity = req.StockQuantity
 	}

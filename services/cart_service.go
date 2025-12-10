@@ -4,12 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 	"math"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
-
-	"github.com/gofrs/uuid"
-	"gorm.io/gorm"
 )
 
 type CartService struct {
@@ -76,6 +74,7 @@ func (s *CartService) ViewCart(userID uuid.UUID) (*models.Cart, error) {
 		item.UnitPrice = item.Product.Price
 		total += int64(item.Quantity) * item.UnitPrice
 	}
+	total = total / 100
 	cart.Total = total
 
 	return cart, nil
@@ -84,9 +83,11 @@ func (s *CartService) ViewCart(userID uuid.UUID) (*models.Cart, error) {
 func (s *CartService) UpdateItemQuantity(userID, productID uuid.UUID, quantity int) (*models.CartItem, error) {
 	cartItem, err := s.CartRepo.UpdateItemQuantity(userID, productID, quantity)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
-	return cartItem, nil 
+	return cartItem, nil
+}
+
 func (s *CartService) RemoveItem(userID, productID uuid.UUID) error {
 	cart, err := s.CartRepo.GetOrCreateCart(userID)
 	if err != nil {
@@ -110,6 +111,8 @@ func (s *CartService) RemoveItem(userID, productID uuid.UUID) error {
 	for _, item := range items {
 		total += int64(item.Quantity) * item.UnitPrice
 	}
+
+	total = total / 100
 
 	return s.CartRepo.UpdateCartTotal(total, cart.ID)
 }
