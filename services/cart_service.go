@@ -74,7 +74,7 @@ func (s *CartService) ViewCart(userID uuid.UUID) (*models.Cart, error) {
 		item.UnitPrice = item.Product.Price
 		total += int64(item.Quantity) * item.UnitPrice
 	}
-	// total = total / 100
+
 	cart.Total = total
 
 	return cart, nil
