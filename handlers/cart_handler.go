@@ -87,7 +87,7 @@ func (h *CartHandler) ViewCart(w http.ResponseWriter, r *http.Request) {
 
 	resp := map[string]interface{}{
 		"items": itemsResp,
-		"total": cart.Total,
+		"total": fmt.Sprintf("%.2f", float64(cart.Total)/100),
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
-	"math"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
 )
@@ -32,7 +31,7 @@ func (s *ProductService) AddProduct(products []models.Product) error {
 			return errors.New("product price is required and cannot be 0")
 		}
 
-		product.Price = int64(math.Round(float64(product.Price) * 100))
+		// product.Price = int64(math.Round(float64(product.Price) * 100))
 
 		if product.StockQuantity == 0 {
 			return errors.New("stock quantity is required and cannot be 0")
@@ -99,7 +98,7 @@ func (s *ProductService) UpdateProduct(productID uuid.UUID, req *models.Product)
 	if req.Price != 0.0 {
 		product.Price = req.Price
 	}
-	product.Price = int64(math.Round(float64(product.Price) * 100))
+	// product.Price = int64(math.Round(float64(product.Price) * 100))
 
 	if req.StockQuantity != 0 {
 		product.StockQuantity = req.StockQuantity

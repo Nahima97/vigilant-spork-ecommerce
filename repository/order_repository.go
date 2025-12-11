@@ -153,11 +153,6 @@ func (r *OrderRepo) MoveCartItemsToOrder(ctx context.Context, orderID uuid.UUID,
 		return err
 	}
 
-	// err = db.Save(&order).Error
-	// if err != nil {
-	// 	return err
-	// }
-
 	return nil
 }
 
