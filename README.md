@@ -78,4 +78,4 @@ Complete CRUD support:
 
 - Golang & GORM Communities for documentation and examples
 - PostgreSQL for robust and open-source database technology
-- Project authors Safa Aydarus, Nahima Sultana, Sevi Hazim for building a clean, production-level backend
+- Project authors Nahima Sultana, Safa Aydarus, and Sevi Hazim for building a clean, production-level backend
