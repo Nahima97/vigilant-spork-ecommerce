@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"vigilant-spork/middleware"
 	"vigilant-spork/models"
 	"vigilant-spork/services"
@@ -20,6 +21,19 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	role := strings.ToLower(signUp.Role)
+
+	if role == "" {
+		role = "customer"
+	}
+
+	if role != "admin" && role != "customer" {
+		http.Error(w, "role must be either 'admin' or 'customer'", http.StatusBadRequest)
+		return
+	}
+
+	signUp.Role = role
 
 	err := h.Service.RegisterUser(&signUp)
 	if err != nil {

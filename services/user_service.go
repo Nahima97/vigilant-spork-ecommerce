@@ -42,10 +42,6 @@ func (s *UserService) RegisterUser(user *models.User) error {
 	}
 	user.Password = string(hashed)
 
-	if user.Role == "" {
-		user.Role = "customer"
-	}
-
 	err = s.UserRepo.CreateUser(user)
 	if err != nil {
 		return err
