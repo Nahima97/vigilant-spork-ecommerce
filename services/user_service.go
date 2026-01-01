@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"golang.org/x/crypto/bcrypt"
 	"os"
 	"regexp"
 	"vigilant-spork/middleware"
@@ -36,11 +35,11 @@ func (s *UserService) RegisterUser(user *models.User) error {
 		return ErrEmailExists
 	}
 
-	hashed, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPass, err := utils.HashPassword(user.Password) 
 	if err != nil {
 		return err
 	}
-	user.Password = string(hashed)
+	user.Password = hashedPass
 
 	err = s.UserRepo.CreateUser(user)
 	if err != nil {

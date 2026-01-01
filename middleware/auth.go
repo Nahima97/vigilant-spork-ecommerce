@@ -50,7 +50,7 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 			}
 
 			if isBlacklisted {
-				utils.ErrorJSON(w, http.StatusUnauthorized, "Unauthorized")
+				utils.ErrorJSON(w, http.StatusUnauthorized, "token is blacklisted")
 				return
 			}
 

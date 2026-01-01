@@ -17,7 +17,8 @@ type UserHandler struct {
 
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var signUp models.User
-	if err := json.NewDecoder(r.Body).Decode(&signUp); err != nil {
+	err := json.NewDecoder(r.Body).Decode(&signUp)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -35,7 +36,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	signUp.Role = role
 
-	err := h.Service.RegisterUser(&signUp)
+	err = h.Service.RegisterUser(&signUp)
 	if err != nil {
 		if errors.Is(err, services.ErrEmailExists) {
 			http.Error(w, err.Error(), http.StatusConflict)

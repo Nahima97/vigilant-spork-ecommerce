@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
-	"math"
 	"vigilant-spork/models"
 	"vigilant-spork/repository"
 )
@@ -29,12 +28,9 @@ func (s *CartService) AddToCart(userID, productID uuid.UUID) error {
 	if err != nil {
 		return err
 	}
-
 	if product == nil {
 		return fmt.Errorf("product not found")
 	}
-
-	product.Price = int64(math.Round(float64(product.Price) * 100))
 
 	err = s.CartRepo.AddItemToCart(productID, cart.ID)
 	if err != nil {
