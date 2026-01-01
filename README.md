@@ -1,5 +1,5 @@
-# vigilant-spork
-Vigilant-Spork — E-Commerce API (Golang)
+# Vigilant-Spork — E-Commerce API (Golang)
+
 ### 📌 Project Title & Overview
 
 Vigilant-Spork is a production-ready E-Commerce REST API built with Golang, PostgreSQL, GORM, and JWT Authentication.
