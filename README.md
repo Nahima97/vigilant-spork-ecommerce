@@ -1,4 +1,4 @@
-# Vigilant-Spork — E-Commerce API (Golang)
+# Vigilant-Spork - E-Commerce API (Golang)
 
 ### 📌 Project Title & Overview
 
